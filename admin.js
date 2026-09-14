@@ -13,7 +13,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const CLOUD_NAME = "sole"; 
+const CLOUD_NAME = "rlrxdhzq"; 
 const UPLOAD_PRESET = "presetnuevo"; 
 
 const form = document.getElementById("form-producto");
