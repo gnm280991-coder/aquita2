@@ -50,7 +50,7 @@ form.addEventListener("submit", async (e) => {
         const datosImagen = await respuestaCloudinary.json();
 
         if (!datosImagen.secure_url) {
-            throw new Error("Error al subir la imagen.");
+            throw new Error("Cloudinary no devolvió la URL: " + JSON.stringify(datosImagen));
         }
 
         mensajeEstado.textContent = "Guardando producto en Firestore...";
@@ -69,9 +69,8 @@ form.addEventListener("submit", async (e) => {
     } catch (error) {
         console.error(error);
         mensajeEstado.style.color = "red";
-        mensajeEstado.textContent = "Hubo un error al guardar. Revisa la consola.";
+        mensajeEstado.textContent = "Error: " + error.message;
     } finally {
         btnGuardar.disabled = false;
     }
 });
-
