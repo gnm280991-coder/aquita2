@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Aquí tái | Tienda Oficial</title>
   <style>
     :root {
@@ -12,19 +12,22 @@
       --text-muted: #6b7280;
       --border-color: #e5e7eb;
       --accent-color: #ff9d00;
+      --accent-hover: #e08b00;
       --radius: 14px;
       --shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
 
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: var(--bg-main);
       color: var(--text-main);
-      padding-bottom: 40px;
+      padding-bottom: 50px;
     }
 
+    /* HEADER STICKY */
     header {
       background: var(--bg-card);
       border-bottom: 1px solid var(--border-color);
@@ -36,33 +39,87 @@
     .top {
       max-width: 1200px;
       margin: auto;
-      padding: 12px 16px;
+      padding: 10px 16px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      gap: 12px;
     }
 
-    .brand { font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
-    .brand span { background: var(--accent-color); color: #000; font-size: 11px; padding: 2px 6px; border-radius: 6px; }
+    .logo {
+      height: 40px;
+      width: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid var(--border-color);
+    }
 
-    .container {
+    .brand-wrap { flex: 1; }
+    .brand { font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 6px; }
+    .sub { font-size: 11px; color: var(--text-muted); }
+
+    /* CONTENEDOR PRINCIPAL */
+    .wrap {
       max-width: 1200px;
       margin: auto;
       padding: 16px;
     }
 
+    /* BUSCADOR Y FILTROS */
+    .table-controls { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+    input[type=text] {
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      color: var(--text-main);
+      border-radius: 10px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input[type=text]:focus { border-color: var(--accent-color); }
+
+    .filter-chips-scroll {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      margin-bottom: 16px;
+      scrollbar-width: none;
+    }
+    .filter-chips-scroll::-webkit-scrollbar { display: none; }
+
+    .filter-pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: 0.2s;
+    }
+    .filter-pill.active {
+      background: var(--accent-color);
+      color: #111;
+      border-color: var(--accent-color);
+    }
+
     /* GRID DE PRODUCTOS */
     .products-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 16px;
-      margin-top: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+    }
+    @media (min-width: 768px) {
+      .products-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
     }
 
     .product-card {
       background: var(--bg-card);
-      border: 1px solid var(--border-color);
       border-radius: var(--radius);
+      border: 1px solid var(--border-color);
       overflow: hidden;
       box-shadow: var(--shadow);
       display: flex;
@@ -70,14 +127,15 @@
       cursor: pointer;
       transition: transform 0.2s;
     }
-    .product-card:hover { transform: translateY(-3px); }
+    .product-card:active { transform: scale(0.98); }
 
     .product-img-wrap {
       width: 100%;
-      height: 180px;
-      background: #eee;
+      height: 160px;
+      background: var(--bg-main);
       position: relative;
     }
+    @media (min-width: 768px) { .product-img-wrap { height: 200px; } }
 
     .product-img {
       width: 100%;
@@ -89,73 +147,146 @@
       padding: 12px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
       flex: 1;
     }
 
     .product-category { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); }
-    .product-name { font-size: 14px; font-weight: 700; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .product-price { font-size: 16px; font-weight: 800; color: var(--text-main); margin-top: auto; }
-    
+    .product-name { font-size: 13px; font-weight: 700; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .product-price { font-size: 16px; font-weight: 800; color: var(--text-main); margin-top: 4px; }
+
     .badge-stock {
-      font-size: 11px;
+      font-size: 10px;
       padding: 2px 6px;
-      border-radius: 4px;
+      border-radius: 6px;
       width: fit-content;
       font-weight: bold;
     }
     .in-stock { background: #d1fae5; color: #065f46; }
     .out-stock { background: #fee2e2; color: #991b1b; }
 
-    /* MODAL DETALLE */
+    /* MODAL DE DETALLES */
     .modal {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
-      display: none; align-items: center; justify-content: center; z-index: 300; padding: 16px;
+      position: fixed; inset: 0; background: #0008;
+      display: none; align-items: center; justify-content: center;
+      z-index: 300; padding: 16px;
     }
     .modal.open { display: flex; }
+
     .modal-content {
       background: var(--bg-card); border-radius: 20px;
-      width: min(100%, 450px); max-height: 90vh; overflow: auto; padding: 20px;
+      width: min(100%, 420px); max-height: 90vh;
+      overflow: auto; padding: 20px; box-shadow: 0 10px 30px #0005;
+    }
+    .modal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 14px;
     }
     .modal-close {
       border: 0; background: var(--bg-main); color: var(--text-main);
-      border-radius: 50%; width: 30px; height: 30px; cursor: pointer; float: right; font-weight: bold;
+      border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 14px;
+    }
+
+    .modal-gallery {
+      display: flex; gap: 8px; overflow-x: auto; margin-bottom: 14px;
+      background: #0001; padding: 8px; border-radius: 12px;
+    }
+    .modal-img {
+      width: 75px; height: 75px; border-radius: 10px; object-fit: cover;
+      background: #000; border: 1px solid var(--border-color); flex-shrink: 0; cursor: pointer;
+    }
+    .detail-row {
+      display: flex; justify-content: space-between; padding: 8px 0;
+      border-bottom: 1px solid var(--border-color); font-size: 13px;
+    }
+    .detail-desc { margin-top: 10px; line-height: 1.5; color: var(--text-muted); font-size: 13px; word-break: break-word; }
+    .detail-desc ul { padding-left: 20px; margin: 4px 0; }
+
+    /* LIGHTBOX PANTALLA COMPLETA */
+    .lightbox-modal {
+      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.95);
+      display: none; align-items: center; justify-content: center; z-index: 500; padding: 16px;
+    }
+    .lightbox-modal.open { display: flex; }
+    .lightbox-img { max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 8px; }
+    .lightbox-close {
+      position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.2);
+      color: #fff; border: 0; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; z-index: 510;
+    }
+    .lightbox-btn {
+      position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255, 255, 255, 0.2);
+      color: #fff; border: 0; border-radius: 50%; width: 44px; height: 44px; font-size: 20px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; z-index: 510;
+    }
+    .lightbox-btn.prev { left: 16px; }
+    .lightbox-btn.next { right: 16px; }
+    .lightbox-counter {
+      position: absolute; bottom: 20px; color: #fff; font-size: 13px; background: rgba(0,0,0,0.6); padding: 6px 14px; border-radius: 20px;
     }
   </style>
 </head>
 <body>
 
+  <!-- HEADER -->
   <header>
     <div class="top">
-      <div class="brand">Aquí tái <span>TIENDA OFICIAL</span></div>
-      <div style="font-size: 12px; color: var(--text-muted);">Cochabamba, Bolivia</div>
+      <img class="logo" src="logo.png" alt="Aquí tái" onerror="this.style.display='none'">
+      <div class="brand-wrap">
+        <div class="brand">Aquí tái <span style="background:var(--accent-color); color:#000; font-size:10px; font-weight:800; padding:2px 6px; border-radius:6px;">TIENDA</span></div>
+        <div class="sub">Cochabamba, Bolivia</div>
+      </div>
     </div>
   </header>
 
-  <main class="container">
-    <h2>Catálogo Disponible</h2>
-    <div id="publicProductsGrid" class="products-grid">
-      <p style="grid-column: 1/-1; text-align: center; padding: 40px;">⏳ Cargando productos...</p>
+  <!-- CONTENIDO -->
+  <main class="wrap">
+    
+    <!-- CONTROLES Y BUSCADOR -->
+    <div class="table-controls">
+      <input type="text" id="publicSearch" placeholder="🔎 Buscar productos..." style="flex:1;" oninput="filterPublicCatalog()">
     </div>
+
+    <!-- FILTROS DE CATEGORÍA DINÁMICOS -->
+    <div class="filter-chips-scroll" id="publicFilterChips">
+      <button class="filter-pill active" onclick="setPublicCategory('all', this)">📋 Todo</button>
+    </div>
+
+    <!-- GRID DE PRODUCTOS -->
+    <div id="publicGrid" class="products-grid">
+      <div style="grid-column: 1/-1; text-align:center; padding:40px; color:var(--text-muted);">⏳ Cargando catálogo...</div>
+    </div>
+
   </main>
 
   <!-- MODAL DE DETALLE -->
-  <div id="detailModal" class="modal" onclick="if(event.target===this)closeModal()">
+  <div id="viewModal" class="modal" onclick="if(event.target===this)closeModal()">
     <div class="modal-content">
-      <button class="modal-close" onclick="closeModal()">✕</button>
-      <div id="modalImgContainer" style="width:100%; height:220px; border-radius:10px; overflow:hidden; margin-bottom:12px; background:#0001;">
-        <img id="modalImg" src="" style="width:100%; height:100%; object-fit:cover;" alt="">
+      <div class="modal-header">
+        <h3 id="modalTitle" style="margin:0; font-size:16px;">Ficha del Producto</h3>
+        <button class="modal-close" onclick="closeModal()">✕</button>
       </div>
-      <div id="modalCategory" style="font-size:11px; font-weight:bold; color:var(--text-muted); text-transform:uppercase;"></div>
-      <h3 id="modalName" style="margin: 4px 0 10px; font-size: 18px;"></h3>
-      <div id="modalPrice" style="font-size: 20px; font-weight: 800; color:var(--accent-color); margin-bottom: 12px;"></div>
-      <div id="modalStockBadge" style="margin-bottom: 14px;"></div>
-      <hr style="border:0; border-top:1px solid var(--border-color); margin:12px 0;">
-      <div id="modalDesc" style="font-size: 13px; line-height: 1.5; color: var(--text-muted);"></div>
+
+      <div id="modalGallery" class="modal-gallery"></div>
+
+      <div class="detail-row"><span>🏷️ Categoría:</span><b id="modalCat">-</b></div>
+      <div class="detail-row"><span>💵 Precio:</span><b id="modalPrice">-</b></div>
+      <div class="detail-row"><span>📦 Disponibilidad:</span><b id="modalStock">-</b></div>
+
+      <div style="margin-top:14px; font-weight:bold; font-size:12px; color:var(--text-muted); text-transform:uppercase;">📝 Descripción:</div>
+      <div id="modalDesc" class="detail-desc"></div>
     </div>
   </div>
 
-  <!-- FIREBASE SDK V10 -->
+  <!-- VISOR LIGHTBOX PANTALLA COMPLETA -->
+  <div id="lightboxModal" class="lightbox-modal" onclick="if(event.target===this)closeLightbox()">
+    <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+    <button class="lightbox-btn prev" onclick="changeLightboxImg(-1)">◀</button>
+    <img id="lightboxImg" class="lightbox-img" src="" alt="Vista Completa">
+    <button class="lightbox-btn next" onclick="changeLightboxImg(1)">▶</button>
+    <div id="lightboxCounter" class="lightbox-counter">1 / 1</div>
+  </div>
+
+  <!-- SCRIPT FIREBASE SDK V10 -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -172,92 +303,186 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    let publicProducts = [];
+    let allProducts = [];
+    let currentCategoryFilter = 'all';
+    let activeGalleryImages = [];
+    let activeImageIndex = 0;
 
-    async function loadPublicCatalog() {
-      const grid = document.getElementById("publicProductsGrid");
+    const publicGrid = document.getElementById("publicGrid");
+    const viewModal = document.getElementById("viewModal");
+    const lightboxModal = document.getElementById("lightboxModal");
+    const lightboxImg = document.getElementById("lightboxImg");
+    const lightboxCounter = document.getElementById("lightboxCounter");
+
+    async function loadPublicProducts() {
       try {
         const querySnapshot = await getDocs(collection(db, "products"));
-        publicProducts = [];
+        allProducts = [];
 
         querySnapshot.forEach((docSnap) => {
           const data = docSnap.data();
-          // Solo incluimos productos que tengan active en true
+          // Solo cargamos productos que estén marcados como activos (visibles)
           if (data.active === true) {
-            publicProducts.push({ id: docSnap.id, ...data });
+            allProducts.push({ id: docSnap.id, ...data, createdAt: data.createdAt || 0 });
           }
         });
 
-        if (publicProducts.length === 0) {
-          grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">No hay productos disponibles en este momento.</p>`;
-          return;
-        }
+        // Ordenar por fecha de creación (los más recientes primero, igual que en admin)
+        allProducts.sort((a, b) => b.createdAt - a.createdAt);
 
-        grid.innerHTML = publicProducts.map(p => {
-          // Extraer imagen principal de forma segura (compatible con array images o campo image)
-          let imgUrl = 'https://via.placeholder.com/300?text=Aquí+tái';
-          if (Array.isArray(p.images) && p.images.length > 0) imgUrl = p.images[0];
-          else if (p.image) imgUrl = p.image;
-
-          const stock = Number(p.stock || 0);
-          const stockHtml = stock > 0 
-            ? `<span class="badge-stock in-stock">Stock: ${stock}</span>` 
-            : `<span class="badge-stock out-stock">Agotado</span>`;
-
-          return `
-            <div class="product-card" onclick="openProductModal('${p.id}')">
-              <div class="product-img-wrap">
-                <img class="product-img" src="${escapeHTML(imgUrl)}" alt="${escapeHTML(p.name)}" loading="lazy">
-              </div>
-              <div class="product-info">
-                <span class="product-category">${escapeHTML(p.category || 'General')}</span>
-                <span class="product-name">${escapeHTML(p.name)}</span>
-                ${stockHtml}
-                <div class="product-price">Bs ${Number(p.price || 0).toFixed(2)}</div>
-              </div>
-            </div>
-          `;
-        }).join("");
-
+        buildCategoryFilters();
+        filterPublicCatalog();
       } catch (error) {
         console.error(error);
-        grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: red;">Error al cargar el catálogo.</p>`;
+        publicGrid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; color:var(--danger-color); padding:30px;">❌ Error al cargar los productos.</div>`;
       }
     }
 
-    window.openProductModal = function(id) {
-      const p = publicProducts.find(x => x.id === id);
+    function buildCategoryFilters() {
+      const chipsContainer = document.getElementById("publicFilterChips");
+      
+      allProducts.forEach(p => {
+        if (p.category && p.category.trim()) {
+          const cat = p.category.trim();
+          let pillExists = Array.from(chipsContainer.querySelectorAll('.filter-pill')).some(btn => btn.getAttribute('onclick')?.includes(`'${cat}'`));
+          if (!pillExists) {
+            const pill = document.createElement('button');
+            pill.className = 'filter-pill';
+            pill.setAttribute('onclick', `setPublicCategory('${cat}', this)`);
+            pill.textContent = `📦 ${cat}`;
+            chipsContainer.appendChild(pill);
+          }
+        }
+      });
+    }
+
+    window.setPublicCategory = function(cat, btnElement) {
+      document.querySelectorAll('.filter-pill').forEach(el => el.classList.remove('active'));
+      btnElement.classList.add('active');
+      currentCategoryFilter = cat;
+      filterPublicCatalog();
+    };
+
+    window.filterPublicCatalog = function() {
+      const q = document.getElementById("publicSearch").value.toLowerCase();
+
+      let filtered = allProducts.filter(p => {
+        const text = [p.name, p.category, p.description].filter(Boolean).join(" ").toLowerCase();
+        const matchesQuery = !q || text.includes(q);
+        if (!matchesQuery) return false;
+
+        if (currentCategoryFilter !== 'all') {
+          return (p.category || "").toLowerCase() === currentCategoryFilter.toLowerCase();
+        }
+        return true;
+      });
+
+      renderPublicGrid(filtered);
+    };
+
+    function renderPublicGrid(list) {
+      if (!list.length) {
+        publicGrid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:40px; color:var(--text-muted);">No se encontraron productos disponibles.</div>`;
+        return;
+      }
+
+      publicGrid.innerHTML = list.map(p => {
+        const images = getImagesArray(p);
+        const mainImg = images[0] || 'https://via.placeholder.com/300?text=Aquí+tái';
+        const stock = Number(p.stock || 0);
+
+        const stockBadge = stock > 0 
+          ? `<span class="badge-stock in-stock">Stock: ${stock}</span>` 
+          : `<span class="badge-stock out-stock">Agotado</span>`;
+
+        return `
+          <div class="product-card" onclick="viewProductDetails('${p.id}')">
+            <div class="product-img-wrap">
+              <img class="product-img" src="${escapeHTML(mainImg)}" alt="Foto" loading="lazy">
+            </div>
+            <div class="product-info">
+              <span class="product-category">${escapeHTML(p.category || 'General')}</span>
+              <span class="product-name">${escapeHTML(p.name)}</span>
+              ${stockBadge}
+              <div class="product-price">Bs ${Number(p.price || 0).toFixed(2)}</div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    window.viewProductDetails = function(id) {
+      const p = allProducts.find(x => x.id === id);
       if (!p) return;
 
-      let imgUrl = 'https://via.placeholder.com/300?text=Aquí+tái';
-      if (Array.isArray(p.images) && p.images.length > 0) imgUrl = p.images[0];
-      else if (p.image) imgUrl = p.image;
-
-      document.getElementById("modalImg").src = imgUrl;
-      document.getElementById("modalCategory").textContent = p.category || 'General';
-      document.getElementById("modalName").textContent = p.name || '';
-      document.getElementById("modalPrice").textContent = `Bs ${Number(p.price || 0).toFixed(2)}`;
+      activeGalleryImages = getImagesArray(p);
+      document.getElementById("modalTitle").textContent = p.name || "Detalle del Producto";
+      document.getElementById("modalCat").textContent = p.category || "General";
+      document.getElementById("modalPrice").textContent = "Bs " + Number(p.price || 0).toFixed(2);
       
       const stock = Number(p.stock || 0);
-      document.getElementById("modalStockBadge").innerHTML = stock > 0 
-        ? `<span class="badge-stock in-stock">Unidades disponibles: ${stock}</span>` 
-        : `<span class="badge-stock out-stock">Producto Agotado</span>`;
+      document.getElementById("modalStock").innerHTML = stock > 0 
+        ? `<span style="color:#065f46;">${stock} unidades disponibles</span>` 
+        : `<span style="color:#991b1b;">Agotado temporalmente</span>`;
 
-      // Quill guarda la descripción en formato HTML seguro
-      document.getElementById("modalDesc").innerHTML = p.description || 'Sin descripción detallada.';
+      // Descripción generada por Quill (HTML enriquecido)
+      document.getElementById("modalDesc").innerHTML = p.description || "Sin descripción detallada.";
 
-      document.getElementById("detailModal").classList.add("open");
+      const gallery = document.getElementById("modalGallery");
+      if (activeGalleryImages.length) {
+        gallery.innerHTML = activeGalleryImages.map((img, idx) => `
+          <img src="${escapeHTML(img)}" class="modal-img" loading="lazy" onclick="openLightbox(${idx})">
+        `).join("");
+        gallery.style.display = "flex";
+      } else {
+        gallery.style.display = "none";
+      }
+
+      viewModal.classList.add("open");
     };
 
     window.closeModal = function() {
-      document.getElementById("detailModal").classList.remove("open");
+      viewModal.classList.remove("open");
     };
+
+    window.openLightbox = function(index) {
+      if (!activeGalleryImages.length) return;
+      activeImageIndex = index;
+      updateLightbox();
+      lightboxModal.classList.add("open");
+    };
+
+    window.closeLightbox = function() {
+      lightboxModal.classList.remove("open");
+    };
+
+    window.changeLightboxImg = function(step) {
+      activeImageIndex += step;
+      if (activeImageIndex < 0) activeImageIndex = activeGalleryImages.length - 1;
+      else if (activeImageIndex >= activeGalleryImages.length) activeImageIndex = 0;
+      updateLightbox();
+    };
+
+    function updateLightbox() {
+      lightboxImg.src = activeGalleryImages[activeImageIndex];
+      lightboxCounter.textContent = `${activeImageIndex + 1} / ${activeGalleryImages.length}`;
+    }
+
+    function getImagesArray(product) {
+      let list = [];
+      if (Array.isArray(product.images)) list = product.images;
+      else if (typeof product.images === 'string') {
+        try { list = JSON.parse(product.images); } catch(e){}
+      } else if (product.image) list = [product.image];
+      return list;
+    }
 
     function escapeHTML(str) {
       return String(str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
 
-    loadPublicCatalog();
+    // Inicializar carga de la tienda
+    loadPublicProducts();
   </script>
 </body>
 </html>
