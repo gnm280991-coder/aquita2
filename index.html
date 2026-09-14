@@ -698,7 +698,7 @@
   <!-- FIREBASE SDK V10 (CONFIGURACIÓN OFICIAL DE TU PROYECTO) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, doc, getDoc, runTransaction, updateIdToken } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, doc, getDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyAj_ZTJwiNL3cZIKU2L-RlaLyO_vO68oGc",
@@ -808,7 +808,7 @@
       btn.textContent = isLight ? "☀️" : "🌙";
     }
 
-    /* CARGAR CATÁLOGO DESDE LA COLECCIÓN "productos" */
+    /* CARGAR CATÁLOGO DESDE LA COLECCIÓN "productos" (CON DIAGNÓSTICO VISUAL) */
     async function loadCatalog() {
       const grid = document.getElementById("catalogGrid");
       grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">⏳ Cargando catálogo...</div>`;
@@ -819,13 +819,11 @@
 
         querySnapshot.forEach((docSnap) => {
           const data = docSnap.data();
-          // Solo incluimos productos con active en true
           if (data.active === true) {
             products.push({ id: docSnap.id, ...data });
           }
         });
 
-        // Ordenar por fecha o ID reciente
         products.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
         currentCategory = 'all';
@@ -835,7 +833,16 @@
         filterProducts();
       } catch (e) {
         console.error("Error al cargar productos:", e);
-        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:red; padding: 30px;">Error al conectar con la base de datos.</div>`;
+        // DIAGNÓSTICO VISUAL EN PANTALLA: Muestra exactamente por qué falló
+        grid.innerHTML = `
+          <div style="grid-column: 1/-1; background: #1e293b; border: 1px solid #ef4444; border-radius: 12px; padding: 20px; text-align: center; color: #f8fafc;">
+            <div style="color: #ef4444; font-weight: 800; font-size: 15px; margin-bottom: 8px;">❌ Error de conexión o permisos con Firebase</div>
+            <div style="font-size: 12px; color: #94a3b8; word-break: break-all; background: #0f172a; padding: 10px; border-radius: 8px; margin-top: 8px; text-align: left;">
+              <b>Mensaje:</b> ${e.message}
+            </div>
+            <button onclick="reloadPage()" style="margin-top: 14px; background: #ff9d00; color: #0f172a; border: 0; padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer;">🔄 Reintentar</button>
+          </div>
+        `;
       }
     }
 
@@ -1033,7 +1040,6 @@
       document.getElementById("modalPrice").textContent = "Bs " + Number(p.price || 0).toFixed(2);
       document.getElementById("modalStock").textContent = isOutOfStock ? "❌ Agotado" : (stock + " unidades");
       
-      // Soporte para formato seguro o texto plano
       document.getElementById("modalDesc").innerHTML = p.description || "Sin descripción detallada.";
 
       modalAddBtn.disabled = isOutOfStock;
@@ -1120,7 +1126,6 @@
       return String(str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
 
-    // Inicializar al cargar el DOM
     document.addEventListener("DOMContentLoaded", async () => {
       initTheme();
       loadSavedCart();
