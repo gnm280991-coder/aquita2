@@ -14,7 +14,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const CLOUD_NAME = "sole"; 
-const UPLOAD_PRESET = "catalogo_aquita"; 
+const UPLOAD_PRESET = "presetnuevo"; 
 
 const form = document.getElementById("form-producto");
 const mensajeEstado = document.getElementById("mensaje-estado");
