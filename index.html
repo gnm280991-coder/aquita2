@@ -856,7 +856,7 @@
       grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">⏳ Cargando catálogo...</div>`;
 
       try {
-        const snapshot = await db.collection("products").get();
+        const snapshot = await db.collection("productos").get();
 
         products = [];
         snapshot.forEach(doc => {
