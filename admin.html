@@ -1,161 +1,1514 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Administración - Aquí tái</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Quill.js Editor de texto enriquecido -->
-    <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
-    <!-- Sortable.js para ordenamiento -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Aquí tái | Panel Admin Express Pro</title>
+
+  <!-- SORTABLE JS -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js" defer></script>
+
+  <!-- QUILL.JS (EDITOR ENRIQUECIDO) CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+
+  <style>
+    /* VARIABLES Y MODO OSCURO */
+    :root {
+      --bg-main: #f4f6f8;
+      --bg-card: #ffffff;
+      --text-main: #1f2937;
+      --text-muted: #6b7280;
+      --border-color: #e5e7eb;
+      --accent-color: #ff9d00;
+      --accent-hover: #e08b00;
+      --btn-bg: #111827;
+      --btn-text: #ffffff;
+      --success-color: #10b981;
+      --danger-color: #ef4444;
+      --warning-color: #f59e0b;
+      --radius: 14px;
+      --shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    body.dark-mode {
+      --bg-main: #111827;
+      --bg-card: #1f2937;
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+      --border-color: #374151;
+      --btn-bg: #374151;
+      --btn-text: #ffffff;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      transition: background 0.3s, color 0.3s;
+      padding-bottom: 50px;
+    }
+
+    button, input, select, textarea { font-family: inherit; }
+
+    /* TOAST NOTIFICACIONES */
+    #toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-width: 90vw;
+    }
+
+    .toast {
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      animation: slideUp 0.2s ease-out;
+      border-left: 4px solid var(--accent-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .toast-btn {
+      background: var(--danger-color);
+      color: #fff;
+      border: 0;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    /* LOGIN OVERLAY */
+    .login-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      padding: 16px;
+    }
+
+    .login-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 30px;
+      border-radius: 20px;
+      width: min(100%, 380px);
+      box-shadow: 0 10px 30px #0002;
+    }
+
+    .login-title { font-size: 22px; font-weight: 800; margin-bottom: 4px; text-align: center; }
+    .login-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; text-align: center; }
+
+    /* HEADER STICKY */
+    header {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .top {
+      max-width: 1200px;
+      margin: auto;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      height: 40px;
+      width: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid var(--border-color);
+    }
+
+    .brand-wrap { flex: 1; }
+    .brand { font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 6px; }
+    .sub { font-size: 11px; color: var(--text-muted); }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .theme-btn, .logout-btn {
+      background: none;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 6px 10px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .logout-btn { border-color: var(--danger-color); color: var(--danger-color); font-size: 12px; font-weight: bold; }
+
+    /* CONTENEDOR PRINCIPAL */
+    .wrap {
+      max-width: 1200px;
+      margin: auto;
+      padding: 16px;
+      display: none;
+    }
+
+    /* TABS */
+    .nav-tabs {
+      display: flex;
+      background: var(--bg-card);
+      padding: 4px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border-color);
+      margin-bottom: 16px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px 8px;
+      border: 0;
+      background: none;
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 13px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.2s;
+      text-align: center;
+    }
+
+    .tab-btn.active {
+      background: var(--accent-color);
+      color: #111;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* MÉTRICAS */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      padding: 12px 14px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow);
+    }
+
+    .kpi-title {
+      font-size: 10px;
+      text-transform: uppercase;
+      font-weight: 800;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .kpi-value { font-size: 18px; font-weight: 800; }
+
+    /* FORMULARIO */
+    .card-form {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 18px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .card-form h2 {
+      margin: 0 0 14px;
+      font-size: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+
+    label { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); }
+
+    input[type=text], input[type=number], input[type=email], input[type=password], select {
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-main);
+      color: var(--text-main);
+      border-radius: 10px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus { border-color: var(--accent-color); }
+
+    /* ESTILOS QUILL EDITOR PARA MODO CLARO / OSCURO */
+    .quill-container {
+      background: var(--bg-main);
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+    }
+    .quill-container .ql-toolbar {
+      border: none !important;
+      border-bottom: 1px solid var(--border-color) !important;
+      background: var(--bg-card);
+    }
+    .quill-container .ql-container {
+      border: none !important;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text-main);
+      min-height: 120px;
+    }
+    body.dark-mode .quill-container .ql-stroke { stroke: #fff !important; }
+    body.dark-mode .quill-container .ql-fill { fill: #fff !important; }
+    body.dark-mode .quill-container .ql-picker { color: #fff !important; }
+
+    .chips-wrap { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+
+    .chip-btn {
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .chip-btn:active { transform: scale(0.95); }
+
+    .preview-container { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; min-height: 74px; }
+    .preview-thumb-wrap { position: relative; cursor: grab; }
+    .preview-thumb-wrap:active { cursor: grabbing; }
+
+    .preview-thumb {
+      width: 64px;
+      height: 64px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: #0001;
+      border: 1px solid var(--border-color);
+    }
+
+    .badge-main {
+      position: absolute;
+      bottom: 2px;
+      left: 2px;
+      background: var(--accent-color);
+      color: #000;
+      font-size: 8px;
+      font-weight: 900;
+      padding: 1px 4px;
+      border-radius: 4px;
+    }
+
+    .preview-remove {
+      position: absolute;
+      top: -6px; right: -6px;
+      background: var(--danger-color);
+      color: #fff;
+      border: 0;
+      border-radius: 50%;
+      width: 22px; height: 22px;
+      font-size: 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .btn-actions { display: flex; gap: 10px; margin-top: 16px; }
+
+    .btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 14px 20px;
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      font-weight: 800;
+      font-size: 15px;
+      cursor: pointer;
+      width: 100%;
+      transition: 0.2s;
+    }
+
+    .btn-primary { background: var(--accent-color); color: #111; }
+    .btn-primary:active { background: var(--accent-hover); }
+    .btn-cancel { background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); font-size: 13px; padding: 6px 12px; width: auto; }
+
+    /* FILTROS RÁPIDOS EN PÍLDORAS */
+    .filter-chips-scroll {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      margin-bottom: 12px;
+      scrollbar-width: none;
+    }
+    .filter-chips-scroll::-webkit-scrollbar { display: none; }
+
+    .filter-pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: 0.2s;
+    }
+    .filter-pill.active {
+      background: var(--accent-color);
+      color: #111;
+      border-color: var(--accent-color);
+    }
+
+    .table-controls { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+
+    .table-wrap {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border-color);
+      overflow-x: auto;
+      box-shadow: var(--shadow);
+    }
+
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; min-width: 520px; }
+    th, td { padding: 10px 10px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+    th { background: var(--bg-main); font-size: 10px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; }
+
+    .prod-img {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: var(--bg-main);
+      cursor: pointer;
+    }
+
+    .clickable-name { cursor: pointer; font-weight: 700; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .clickable-name:hover { color: var(--accent-color); text-decoration: underline; }
+
+    .status-select {
+      padding: 4px 6px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      border: 1px solid var(--border-color);
+      margin-top: 4px;
+    }
+    .status-select.active { background: #d1fae5; color: #065f46; border-color: #34d399; }
+    .status-select.inactive { background: #fee2e2; color: #991b1b; border-color: #f87171; }
+
+    .qty-table { display: flex; align-items: center; gap: 2px; background: var(--bg-main); padding: 2px 4px; border-radius: 8px; border: 1px solid var(--border-color); width: fit-content; }
+    .btn-qty-mini {
+      width: 22px; height: 22px;
+      border-radius: 6px; border: 0;
+      background: var(--bg-card); color: var(--text-main);
+      font-weight: bold; cursor: pointer; font-size: 11px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .action-btns { display: flex; gap: 4px; }
+    .btn-icon {
+      border: 1px solid var(--border-color);
+      background: var(--bg-main); color: var(--text-main);
+      border-radius: 8px; padding: 6px 8px; cursor: pointer; font-size: 13px;
+    }
+
+    /* BOTÓN FLOTANTE (FAB) PARA NUEVO PRODUCTO */
+    .fab-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--accent-color);
+      color: #111;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: bold;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      border: 0;
+      cursor: pointer;
+      z-index: 250;
+      transition: transform 0.2s;
+    }
+    .fab-btn:active { transform: scale(0.9); }
+
+    /* MODAL GENERAL */
+    .modal {
+      position: fixed; inset: 0; background: #0008;
+      display: none; align-items: center; justify-content: center;
+      z-index: 300; padding: 16px;
+    }
+    .modal.open { display: flex; }
+
+    .modal-content {
+      background: var(--bg-card); border-radius: 20px;
+      width: min(100%, 420px); max-height: 90vh;
+      overflow: auto; padding: 20px; box-shadow: 0 10px 30px #0005;
+    }
+    .modal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 14px;
+    }
+    .modal-close {
+      border: 0; background: var(--bg-main); color: var(--text-main);
+      border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 14px;
+    }
+
+    .modal-gallery {
+      display: flex; gap: 8px; overflow-x: auto; margin-bottom: 14px;
+      background: #0001; padding: 8px; border-radius: 12px;
+    }
+    .modal-img {
+      width: 90px; height: 90px; border-radius: 10px; object-fit: cover;
+      background: #000; border: 1px solid var(--border-color); flex-shrink: 0; cursor: pointer;
+    }
+    .detail-row {
+      display: flex; justify-content: space-between; padding: 8px 0;
+      border-bottom: 1px solid var(--border-color); font-size: 13px;
+    }
+    .detail-desc { margin-top: 10px; line-height: 1.5; color: var(--text-muted); font-size: 13px; word-break: break-word; }
+    .detail-desc ul { padding-left: 20px; margin: 4px 0; }
+
+    /* LIGHTBOX */
+    .lightbox-modal {
+      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.95);
+      display: none; align-items: center; justify-content: center; z-index: 500; padding: 16px;
+    }
+    .lightbox-modal.open { display: flex; }
+    .lightbox-img { max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 8px; }
+    .lightbox-close {
+      position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.2);
+      color: #fff; border: 0; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; z-index: 510;
+    }
+    .lightbox-btn {
+      position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255, 255, 255, 0.2);
+      color: #fff; border: 0; border-radius: 50%; width: 44px; height: 44px; font-size: 20px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; z-index: 510;
+    }
+    .lightbox-btn.prev { left: 16px; }
+    .lightbox-btn.next { right: 16px; }
+    .lightbox-counter {
+      position: absolute; bottom: 20px; color: #fff; font-size: 13px; background: rgba(0,0,0,0.6); padding: 6px 14px; border-radius: 20px;
+    }
+  </style>
+
+  <!-- QUILL.JS SCRIPT -->
+  <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
 </head>
-<body class="bg-gray-100 font-sans antialiased">
+<body>
 
-    <div class="flex h-screen overflow-hidden">
-        <!-- Sidebar -->
-        <aside class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex">
-            <div class="p-5 text-2xl font-bold tracking-wider border-b border-slate-800 flex items-center gap-2">
-                <i class="fa-solid fa-box-open text-amber-400"></i> Aquí tái 📦
-            </div>
-            <nav class="flex-1 p-4 space-y-2">
-                <a href="#dashboard" class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-amber-500 text-slate-900 font-semibold transition"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
-                <a href="#productos" class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-slate-800 text-slate-300 transition"><i class="fa-solid fa-boxes-stacked"></i> Inventario</a>
-                <a href="#config" class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-slate-800 text-slate-300 transition"><i class="fa-solid fa-gear"></i> Configuración</a>
-            </nav>
-            <div class="p-4 border-t border-slate-800 text-xs text-slate-400">
-                Cloud: Cloudinary (<span class="text-amber-400">rlrxdhzq</span>)
-            </div>
-        </aside>
+  <div id="toast-container"></div>
 
-        <!-- Main Content -->
-        <main class="flex-1 flex flex-col overflow-y-auto">
-            <header class="bg-white shadow-sm h-16 flex items-center justify-between px-6 z-10">
-                <h1 class="text-xl font-bold text-slate-800">Panel de Control General</h1>
-                <div class="flex items-center gap-4">
-                    <span id="auth-status" class="text-xs bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full font-medium">Firebase Conectado</span>
-                </div>
-            </header>
+  <!-- LOGIN OVERLAY -->
+  <div class="login-overlay" id="loginOverlay">
+    <div class="login-box">
+      <div class="login-title">🔐 Panel Admin</div>
+      <div class="login-sub">Ingresa con tus credenciales de Firebase</div>
 
-            <div class="p-6 space-y-6">
-                <!-- Sección de Inventario / Productos -->
-                <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-cloud-arrow-up text-amber-500 mr-2"></i>Gestor de Productos y Multimedia (Cloudinary)</h2>
-                    </div>
-                    
-                    <!-- Formulario de Ejemplo Integrado -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Título del Producto / Caja Surpresa</label>
-                            <input type="text" id="prod-title" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none" placeholder="Ej. Caja Misteriosa Amazon V6">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Imagen (Subida directa a Cloudinary)</label>
-                            <input type="file" id="prod-image-file" class="w-full border rounded-lg px-3 py-1.5 text-sm file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100">
-                        </div>
-                    </div>
+      <form id="loginForm">
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label>Correo Electrónico</label>
+          <input type="email" id="loginEmail" required placeholder="tu-correo@ejemplo.com" autofocus inputmode="email">
+        </div>
 
-                    <!-- Editor Quill -->
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Descripción detallada</label>
-                        <div id="editor-container" style="height: 120px;" class="bg-white rounded-b-lg"></div>
-                    </div>
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label>Contraseña</label>
+          <input type="password" id="loginPassword" required placeholder="••••••••">
+        </div>
 
-                    <button onclick="subirProductoConCloudinary()" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-5 py-2 rounded-lg text-sm transition shadow-sm">
-                        <i class="fa-solid fa-plus mr-1"></i> Guardar Producto
-                    </button>
-                </div>
-            </div>
-        </main>
+        <button type="submit" class="btn btn-primary" id="btnLoginSubmit">Ingresar al Panel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <header>
+    <div class="top">
+      <img class="logo" src="logo.png" alt="Aquí tái" onerror="this.style.display='none'">
+
+      <div class="brand-wrap">
+        <div class="brand">Aquí tái <span style="background:var(--accent-color); color:#000; font-size:10px; font-weight:800; padding:2px 6px; border-radius:6px;">ADMIN</span></div>
+        <div class="sub" id="adminUserSub">Cochabamba, Bolivia</div>
+      </div>
+
+      <div class="header-actions">
+        <button id="themeBtn" class="theme-btn" onclick="toggleTheme()" title="Cambiar tema">🌙</button>
+        <button id="logoutBtn" class="logout-btn" style="display:none;">🔒 Salir</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENIDO -->
+  <main class="wrap" id="mainWrap">
+
+    <!-- MÉTRICAS -->
+    <section class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-title">Productos Activos</div>
+        <div id="kpiTotal" class="kpi-value">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Valor Inventario</div>
+        <div id="kpiValue" class="kpi-value">Bs 0.00</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Stock Bajo (≤ 3)</div>
+        <div id="kpiLow" class="kpi-value" style="color:var(--warning-color)">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Agotados</div>
+        <div id="kpiOut" class="kpi-value" style="color:var(--danger-color)">0</div>
+      </div>
+    </section>
+
+    <!-- NAVEGACIÓN EN PESTAÑAS -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('tab-form')" id="tabBtnForm">➕ Cargar Producto</button>
+      <button class="tab-btn" onclick="switchTab('tab-list')" id="tabBtnList">📦 Inventario (<span id="countBadge">0</span>)</button>
     </div>
 
-    <!-- Firebase SDKs (Compat / Modular según configuración del proyecto) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <!-- PESTAÑA 1: FORMULARIO -->
+    <div id="tab-form" class="tab-content active">
+      <section class="card-form">
+        <h2 id="formTitle">
+          <span>📦 Agregar Producto</span>
+          <button id="cancelEditBtn" type="button" class="btn-cancel" style="display:none;" onclick="resetForm()">Cancelar</button>
+        </h2>
 
-    <script>
-        // Configuración oficial de Firebase para Aquí tái
-        const firebaseConfig = {
-            apiKey: "AIzaSyD...RlaLyO_vO68oGc", // Reemplaza si requieres la clave completa exacta por seguridad en local
-            authDomain: "aquita-tienda.firebaseapp.com",
-            projectId: "aquita-tienda",
-            storageBucket: "aquita-tienda.appspot.com",
-            messagingSenderId: "981582885638",
-            appId: "1:981582885638:web:9b4f96775ca04d78dba487"
-        };
+        <form id="productForm">
+          <input type="hidden" id="productId">
 
-        // Inicializar Firebase
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const db = firebase.firestore();
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>Nombre del Producto *</label>
+              <input type="text" id="name" required placeholder="Ej. Caja Sorpresa Herramientas Amazon">
+            </div>
 
-        // Inicializar Quill.js
-        var quill = new Quill('#editor-container', {
-            theme: 'snow',
-            placeholder: 'Escribe las características de la sorpresa aquí...'
+            <div class="form-group">
+              <label>Categoría *</label>
+              <div style="display: flex; gap: 6px;">
+                <select id="category" required style="flex: 1;">
+                  <option value="">Selecciona categoría</option>
+                  <option value="Computación">💻 Computación</option>
+                  <option value="Auto y Moto">🚗 Auto y Moto</option>
+                  <option value="Bisutería">💍 Bisutería</option>
+                  <option value="Cocina">🍳 Cocina</option>
+                  <option value="Cuidado Personal">🧴 Cuidado Personal</option>
+                </select>
+                <button type="button" class="btn-cancel" onclick="openCategoryModal()" style="padding: 0 12px; font-weight: bold;">➕</button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Precio (Bs) *</label>
+              <input type="number" id="price" step="0.01" min="0" required placeholder="0.00" inputmode="decimal">
+            </div>
+
+            <div class="form-group">
+              <label>Stock (Unidades) *</label>
+              <input type="number" id="stock" min="0" required placeholder="1" inputmode="numeric">
+              <div class="chips-wrap">
+                <button type="button" class="chip-btn" onclick="addStockShortcut(5)">+5</button>
+                <button type="button" class="chip-btn" onclick="addStockShortcut(10)">+10</button>
+                <button type="button" class="chip-btn" onclick="addStockShortcut(20)">+20</button>
+                <button type="button" class="chip-btn" onclick="addStockShortcut(50)">+50</button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Estado en Catálogo</label>
+              <select id="active">
+                <option value="true">🟢 Visible (Activo)</option>
+                <option value="false">🔴 Oculto (Inactivo)</option>
+              </select>
+            </div>
+
+            <div class="form-group full">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label>Imágenes (Arrastra para reordenar)</label>
+                <select id="imgQuality" style="font-size: 10px; padding: 2px 6px;">
+                  <option value="600">⚡ Ligera (600px)</option>
+                  <option value="800" selected>⚖️ Balanceada (800px)</option>
+                  <option value="1200">📸 HD (1200px)</option>
+                </select>
+              </div>
+
+              <div style="display: flex; gap: 8px; margin-top: 6px;">
+                <button type="button" class="btn" style="background: var(--accent-color); color: #000; font-size: 13px; padding: 10px;" onclick="document.getElementById('cameraInput').click()">
+                  📸 Cámara Directa
+                </button>
+                <button type="button" class="btn" style="background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); font-size: 13px; padding: 10px;" onclick="document.getElementById('fileInput').click()">
+                  🖼️ Galería
+                </button>
+              </div>
+
+              <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
+              <input type="file" id="fileInput" multiple accept="image/*" style="display:none;">
+
+              <div id="previewContainer" class="preview-container"></div>
+            </div>
+
+            <div class="form-group full">
+              <label>Descripción / Detalles (Con formato y viñetas)</label>
+              <div class="quill-container">
+                <div id="editor"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="btn-actions">
+            <button type="submit" id="saveBtn" class="btn btn-primary">💾 Guardar e Insertar al Catálogo</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <!-- PESTAÑA 2: LISTA DE INVENTARIO -->
+    <div id="tab-list" class="tab-content">
+      <div class="table-controls">
+        <input type="text" id="tableSearch" placeholder="🔎 Buscar en inventario..." style="flex:1; min-width:180px;" oninput="filterTable()">
+      </div>
+
+      <!-- FILTROS RÁPIDOS EN PÍLDORAS (HORIZONTAL) -->
+      <div class="filter-chips-scroll" id="filterChipsContainer">
+        <button class="filter-pill active" onclick="setQuickFilter('all', this)">📋 Todo</button>
+        <button class="filter-pill" onclick="setQuickFilter('low', this)">⚠️ Stock Bajo</button>
+        <button class="filter-pill" onclick="setQuickFilter('out', this)">❌ Agotados</button>
+        <button class="filter-pill" onclick="setQuickFilter('inactive', this)">🔴 Ocultos</button>
+      </div>
+
+      <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px; text-align: right;">👉 Desliza la tabla horizontalmente para ver los botones de editar/borrar</div>
+      
+      <section class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Img</th>
+              <th>Producto</th>
+              <th>Precio</th>
+              <th>Stock</th>
+              <th>Acciones / Estado</th>
+            </tr>
+          </thead>
+          <tbody id="inventoryTable">
+            <tr>
+              <td colspan="5" style="text-align:center; padding:30px;">⏳ Cargando inventario...</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+
+  </main>
+
+  <!-- BOTÓN FLOTANTE (FAB) PARA IR DIRECTO A CREAR PRODUCTO -->
+  <button class="fab-btn" onclick="openNewProductTab()" title="Agregar nuevo producto">➕</button>
+
+  <!-- MODAL NUEVA CATEGORÍA -->
+  <div id="categoryModal" class="modal" onclick="if(event.target===this)closeCategoryModal()">
+    <div class="modal-content" style="width: min(100%, 320px);">
+      <div class="modal-header">
+        <h3 style="margin:0; font-size:16px;">Nueva Categoría</h3>
+        <button class="modal-close" onclick="closeCategoryModal()">✕</button>
+      </div>
+      <div class="form-group" style="margin-bottom: 14px;">
+        <label>Nombre de la categoría</label>
+        <input type="text" id="newCategoryInput" placeholder="Ej. Electrónica">
+      </div>
+      <button type="button" class="btn btn-primary" onclick="confirmNewCategory()">Crear Categoría</button>
+    </div>
+  </div>
+
+  <!-- MODAL MODIFICAR STOCK RÁPIDO -->
+  <div id="stockModal" class="modal" onclick="if(event.target===this)closeStockModal()">
+    <div class="modal-content" style="width: min(100%, 320px);">
+      <div class="modal-header">
+        <h3 style="margin:0; font-size:16px;">Ajustar Stock Rápido</h3>
+        <button class="modal-close" onclick="closeStockModal()">✕</button>
+      </div>
+      <div id="stockModalProdName" style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px; font-weight: bold;">-</div>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px;">
+        <button type="button" class="btn" style="background:var(--bg-main); border:1px solid var(--border-color); color:var(--text-main); padding:10px;" onclick="applyStockDelta(5)">+5</button>
+        <button type="button" class="btn" style="background:var(--bg-main); border:1px solid var(--border-color); color:var(--text-main); padding:10px;" onclick="applyStockDelta(10)">+10</button>
+        <button type="button" class="btn" style="background:var(--bg-main); border:1px solid var(--border-color); color:var(--text-main); padding:10px;" onclick="applyStockDelta(20)">+20</button>
+        <button type="button" class="btn" style="background:var(--bg-main); border:1px solid var(--border-color); color:var(--text-main); padding:10px;" onclick="applyStockDelta(-5)">-5</button>
+      </div>
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label>Establecer stock exacto</label>
+        <input type="number" id="exactStockInput" inputmode="numeric" placeholder="Cantidad fija">
+      </div>
+      <button type="button" class="btn btn-primary" onclick="saveExactStock()">Guardar Stock</button>
+    </div>
+  </div>
+
+  <!-- MODAL VISTA PREVIA DETALLADA -->
+  <div id="viewModal" class="modal" onclick="if(event.target===this)closeModal()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle" style="margin:0;">Ficha del Producto</h3>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+
+      <div id="modalGallery" class="modal-gallery"></div>
+
+      <div class="detail-row"><span>🆔 ID Producto:</span><b id="modalId">-</b></div>
+      <div class="detail-row"><span>🏷️ Categoría:</span><b id="modalCat">-</b></div>
+      <div class="detail-row"><span>💵 Precio:</span><b id="modalPrice">-</b></div>
+      <div class="detail-row"><span>📦 Stock disponible:</span><b id="modalStock">-</b></div>
+      <div class="detail-row"><span>🌐 Estado:</span><b id="modalStatus">-</b></div>
+
+      <div style="margin-top:14px; font-weight:bold; font-size:12px; color:var(--text-muted); text-transform:uppercase;">📝 Descripción:</div>
+      <div id="modalDesc" class="detail-desc"></div>
+    </div>
+  </div>
+
+  <!-- VISOR LIGHTBOX PANTALLA COMPLETA -->
+  <div id="lightboxModal" class="lightbox-modal" onclick="if(event.target===this)closeLightbox()">
+    <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+    <button class="lightbox-btn prev" onclick="changeLightboxImg(-1)">◀</button>
+    <img id="lightboxImg" class="lightbox-img" src="" alt="Vista Completa">
+    <button class="lightbox-btn next" onclick="changeLightboxImg(1)">▶</button>
+    <div id="lightboxCounter" class="lightbox-counter">1 / 1</div>
+  </div>
+
+  <!-- SCRIPT FIREBASE SDK V10 -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // Configuración de Cloudinary e ImgBB (según corresponda en tu proyecto actual)
+    const CLOUDINARY_CLOUD_NAME = "rlrxdhzq";
+    const CLOUDINARY_UPLOAD_PRESET = "presetnuevo";
+
+    // Credenciales oficiales de Firebase (Aquí tái)
+    const firebaseConfig = {
+        apiKey: "AIzaSyD...RlaLyO_vO68oGc",
+        authDomain: "aquita-tienda.firebaseapp.com",
+        projectId: "aquita-tienda",
+        storageBucket: "aquita-tienda.appspot.com",
+        messagingSenderId: "981582885638",
+        appId: "1:981582885638:web:9b4f96775ca04d78dba487"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Inicializar Quill Editor
+    const quill = new Quill('#editor', {
+      theme: 'snow',
+      modules: {
+        toolbar: [
+          ['bold', 'italic', 'underline'],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          ['clean']
+        ]
+      }
+    });
+
+    setTimeout(() => {
+      const cleanBtn = document.querySelector('.ql-clean');
+      if (cleanBtn) {
+        cleanBtn.addEventListener('touchstart', (e) => {
+          e.preventDefault();
+          quill.focus();
+          const range = quill.getSelection();
+          if (range) {
+            quill.removeFormat(range.index, range.length);
+          } else {
+            quill.removeFormat(0, quill.getLength());
+          }
+        }, { passive: false });
+      }
+    }, 500);
+
+    let products = [];
+    let currentImages = [];
+    let activeGalleryImages = [];
+    let activeImageIndex = 0;
+    let sortableInstance = null;
+    let currentSelectedCategoryFilter = 'all';
+    let stockEditingProductId = null;
+
+    const inventoryTable = document.getElementById("inventoryTable");
+    const productForm = document.getElementById("productForm");
+    const productId = document.getElementById("productId");
+    const nameInput = document.getElementById("name");
+    const categorySelect = document.getElementById("category");
+    const priceInput = document.getElementById("price");
+    const stockInput = document.getElementById("stock");
+    const activeSelect = document.getElementById("active");
+    const previewContainer = document.getElementById("previewContainer");
+    const formTitle = document.getElementById("formTitle");
+    const cancelEditBtn = document.getElementById("cancelEditBtn");
+    const themeBtn = document.getElementById("themeBtn");
+    const viewModal = document.getElementById("viewModal");
+
+    const loginOverlay = document.getElementById("loginOverlay");
+    const mainWrap = document.getElementById("mainWrap");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const adminUserSub = document.getElementById("adminUserSub");
+
+    const lightboxModal = document.getElementById("lightboxModal");
+    const lightboxImg = document.getElementById("lightboxImg");
+    const lightboxCounter = document.getElementById("lightboxCounter");
+
+    window.showToast = function(message, actionCallback = null, actionLabel = "") {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      
+      const textSpan = document.createElement('span');
+      textSpan.textContent = message;
+      toast.appendChild(textSpan);
+
+      if (actionCallback) {
+        const btn = document.createElement('button');
+        btn.className = 'toast-btn';
+        btn.textContent = actionLabel || 'Confirmar';
+        btn.onclick = () => { actionCallback(); toast.remove(); };
+        toast.appendChild(btn);
+      }
+
+      container.appendChild(toast);
+      setTimeout(() => { if (toast.parentNode) toast.remove(); }, actionCallback ? 6000 : 3500);
+    };
+
+    window.switchTab = function(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      if(tabId === 'tab-form') document.getElementById('tabBtnForm').classList.add('active');
+      if(tabId === 'tab-list') document.getElementById('tabBtnList').classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.openNewProductTab = function() {
+      resetForm();
+      switchTab('tab-form');
+    };
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        loginOverlay.style.display = "none";
+        mainWrap.style.display = "block";
+        logoutBtn.style.display = "inline-block";
+        adminUserSub.textContent = `Sesión: ${user.email}`;
+        loadInventory();
+      } else {
+        loginOverlay.style.display = "flex";
+        mainWrap.style.display = "none";
+        logoutBtn.style.display = "none";
+        adminUserSub.textContent = "Cochabamba, Bolivia";
+      }
+    });
+
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      const btn = document.getElementById("btnLoginSubmit");
+      btn.disabled = true;
+      btn.textContent = "Verificando...";
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        document.getElementById("loginPassword").value = "";
+      } catch (error) {
+        showToast("❌ Error: " + error.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Ingresar al Panel";
+      }
+    });
+
+    logoutBtn.addEventListener("click", async () => { await signOut(auth); });
+
+    window.toggleTheme = function() {
+      document.body.classList.toggle("dark-mode");
+      const isDark = document.body.classList.contains("dark-mode");
+      themeBtn.textContent = isDark ? "☀️" : "🌙";
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+    };
+
+    if (localStorage.getItem("theme") === "dark") {
+      document.body.classList.add("dark-mode");
+      themeBtn.textContent = "☀️";
+    }
+
+    /* GESTIÓN DE CATEGORÍAS MEDIANTE MODAL */
+    window.openCategoryModal = function() {
+      document.getElementById("newCategoryInput").value = "";
+      document.getElementById("categoryModal").classList.add("open");
+    };
+    window.closeCategoryModal = function() {
+      document.getElementById("categoryModal").classList.remove("open");
+    };
+    window.confirmNewCategory = function() {
+      const newCat = document.getElementById("newCategoryInput").value.trim();
+      if (!newCat) return;
+
+      const cleanCat = newCat;
+      let exists = Array.from(categorySelect.options).some(opt => opt.value.toLowerCase() === cleanCat.toLowerCase());
+
+      if (!exists) {
+        categorySelect.add(new Option(`📦 ${cleanCat}`, cleanCat));
+        categorySelect.value = cleanCat;
+        
+        const chipsContainer = document.getElementById("filterChipsContainer");
+        const pill = document.createElement('button');
+        pill.className = 'filter-pill';
+        pill.setAttribute('onclick', `setQuickFilter('${cleanCat}', this)`);
+        pill.textContent = `📦 ${cleanCat}`;
+        chipsContainer.appendChild(pill);
+
+        showToast(`✅ Categoría "${cleanCat}" creada`);
+      } else {
+        categorySelect.value = cleanCat;
+        showToast(`ℹ️ La categoría ya existe`);
+      }
+      closeCategoryModal();
+    };
+
+    /* CARGAR INVENTARIO COMPATIBLE Y ORDENADO */
+    async function loadInventory() {
+      try {
+        const querySnapshot = await getDocs(collection(db, "products"));
+        products = [];
+        
+        querySnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          products.push({ 
+            id: docSnap.id, 
+            ...data,
+            createdAt: data.createdAt || 0 
+          });
         });
 
-        // Configuración de Cloudinary
-        const CLOUDINARY_CLOUD_NAME = "rlrxdhzq";
-        const CLOUDINARY_UPLOAD_PRESET = "presetnuevo";
+        // Ordenamos en memoria: los más recientes arriba
+        products.sort((a, b) => b.createdAt - a.createdAt);
 
-        async function subirProductoConCloudinary() {
-            const title = document.getElementById('prod-title').value;
-            const fileInput = document.getElementById('prod-image-file').files[0];
-            const description = quill.root.innerHTML;
-
-            if (!title || !fileInput) {
-                alert("Por favor completa el título y selecciona una imagen.");
-                return;
+        document.getElementById("countBadge").textContent = products.length;
+        
+        const chipsContainer = document.getElementById("filterChipsContainer");
+        products.forEach(p => {
+          if (p.category && p.category.trim()) {
+            const cat = p.category.trim();
+            let existsOpt = Array.from(categorySelect.options).some(opt => opt.value.toLowerCase() === cat.toLowerCase());
+            if (!existsOpt) {
+              categorySelect.add(new Option(`📦 ${cat}`, cat));
             }
 
-            // Preparar FormData para Cloudinary unsigned upload
-            const formData = new FormData();
-            formData.append('file', fileInput);
-            formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-
-            try {
-                // Mostrar estado de carga (puedes adaptarlo a tu UI)
-                console.log("Subiendo imagen a Cloudinary...");
-                
-                const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-                
-                if (data.secure_url) {
-                    const imageUrl = data.secure_url;
-                    console.log("Imagen subida con éxito:", imageUrl);
-
-                    // Guardar registro en Firestore
-                    await db.collection("productos").add({
-                        title: title,
-                        description: description,
-                        imageUrl: imageUrl,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-
-                    alert("¡Producto guardado en Firebase y multimedia sincronizada con Cloudinary!");
-                    document.getElementById('prod-title').value = '';
-                    document.getElementById('prod-image-file').value = '';
-                    quill.setContents([]);
-                } else {
-                    throw new Error("Error al subir la imagen a Cloudinary.");
-                }
-            } catch (error) {
-                console.error("Error en el proceso:", error);
-                alert("Hubo un error al registrar el producto.");
+            let pillExists = Array.from(chipsContainer.querySelectorAll('.filter-pill')).some(btn => btn.getAttribute('onclick')?.includes(`'${cat}'`));
+            if (!pillExists) {
+              const pill = document.createElement('button');
+              pill.className = 'filter-pill';
+              pill.setAttribute('onclick', `setQuickFilter('${cat}', this)`);
+              pill.textContent = `📦 ${cat}`;
+              chipsContainer.appendChild(pill);
             }
+          }
+        });
+
+        updateMetrics();
+        filterTable();
+      } catch (e) {
+        console.error(e);
+        inventoryTable.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--danger-color);">❌ Error al cargar datos: ${e.message}</td></tr>`;
+      }
+    }
+
+    function updateMetrics() {
+      const activeProds = products.filter(p => p.active);
+      const totalValue = activeProds.reduce((sum, p) => sum + (Number(p.price || 0) * Number(p.stock || 0)), 0);
+      const lowStock = products.filter(p => Number(p.stock || 0) > 0 && Number(p.stock || 0) <= 3);
+      const outOfStock = products.filter(p => Number(p.stock || 0) <= 0);
+
+      document.getElementById("kpiTotal").textContent = activeProds.length;
+      document.getElementById("kpiValue").textContent = "Bs " + totalValue.toFixed(2);
+      document.getElementById("kpiLow").textContent = lowStock.length;
+      document.getElementById("kpiOut").textContent = outOfStock.length;
+    }
+
+    window.setQuickFilter = function(filterValue, btnElement) {
+      document.querySelectorAll('.filter-pill').forEach(el => el.classList.remove('active'));
+      btnElement.classList.add('active');
+      currentSelectedCategoryFilter = filterValue;
+      filterTable();
+    };
+
+    window.filterTable = function() {
+      const q = document.getElementById("tableSearch").value.toLowerCase();
+
+      let list = products.filter(p => {
+        const text = [p.name, p.category, p.description].filter(Boolean).join(" ").toLowerCase();
+        const matchesQ = !q || text.includes(q);
+        if (!matchesQ) return false;
+
+        if (currentSelectedCategoryFilter === "low") return Number(p.stock || 0) > 0 && Number(p.stock || 0) <= 3;
+        if (currentSelectedCategoryFilter === "out") return Number(p.stock || 0) <= 0;
+        if (currentSelectedCategoryFilter === "inactive") return !p.active;
+        if (currentSelectedCategoryFilter !== "all") {
+          return (p.category || "").toLowerCase() === currentSelectedCategoryFilter.toLowerCase();
         }
-    </script>
+        return true;
+      });
+
+      renderTable(list);
+    };
+
+    function renderTable(list) {
+      if (!list.length) {
+        inventoryTable.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px;">No hay productos para mostrar.</td></tr>`;
+        return;
+      }
+
+      inventoryTable.innerHTML = list.map(p => {
+        const images = getImagesArray(p);
+        const mainImg = images[0] || 'https://via.placeholder.com/100?text=No+Img';
+        const stock = Number(p.stock || 0);
+
+        return `
+          <tr>
+            <td>
+              <img class="prod-img" src="${escapeHTML(mainImg)}" alt="Foto" loading="lazy" onclick="viewDetails('${p.id}')">
+            </td>
+            <td>
+              <span class="clickable-name" onclick="viewDetails('${p.id}')">${escapeHTML(p.name)}</span>
+              <small style="color:var(--text-muted); display:block;">${escapeHTML(p.category || 'General')}</small>
+            </td>
+            <td>
+              <b>Bs ${Number(p.price || 0).toFixed(2)}</b>
+            </td>
+            <td>
+              <div class="qty-table" onclick="openStockModal('${p.id}')" title="Toca para cambiar stock rápido">
+                <button class="btn-qty-mini" onclick="event.stopPropagation(); quickStockChange('${p.id}', -1)">-</button>
+                <b style="padding:0 4px; font-size:12px; cursor:pointer;">${stock}</b>
+                <button class="btn-qty-mini" onclick="event.stopPropagation(); quickStockChange('${p.id}', 1)">+</button>
+              </div>
+            </td>
+            <td>
+              <div class="action-btns" style="margin-bottom: 4px;">
+                <button class="btn-icon" onclick="viewDetails('${p.id}')" title="Ver ficha">👁️</button>
+                <button class="btn-icon" onclick="editProduct('${p.id}')" title="Editar producto" style="background:var(--accent-color); color:#111; font-weight:bold;">✏️</button>
+                <button class="btn-icon" onclick="deleteProductPrompt('${p.id}')" title="Eliminar" style="color:var(--danger-color);">🗑️</button>
+              </div>
+              <select class="status-select ${p.active ? 'active' : 'inactive'}" onchange="toggleActive('${p.id}', this.value === 'true')">
+                <option value="true" ${p.active ? 'selected' : ''}>🟢 Activo</option>
+                <option value="false" ${!p.active ? 'selected' : ''}>🔴 Oculto</option>
+              </select>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    /* GESTIÓN DE STOCK RÁPIDO */
+    window.openStockModal = function(id) {
+      const p = products.find(x => x.id === id);
+      if (!p) return;
+      stockEditingProductId = id;
+      document.getElementById("stockModalProdName").textContent = p.name + ` (Stock actual: ${p.stock || 0})`;
+      document.getElementById("exactStockInput").value = p.stock || 0;
+      document.getElementById("stockModal").classList.add("open");
+    };
+    window.closeStockModal = function() {
+      document.getElementById("stockModal").classList.remove("open");
+      stockEditingProductId = null;
+    };
+    window.applyStockDelta = async function(delta) {
+      if (!stockEditingProductId) return;
+      const p = products.find(x => x.id === stockEditingProductId);
+      if (!p) return;
+      const newStock = Math.max(0, Number(p.stock || 0) + delta);
+      document.getElementById("exactStockInput").value = newStock;
+    };
+    window.saveExactStock = async function() {
+      if (!stockEditingProductId) return;
+      const exactVal = parseInt(document.getElementById("exactStockInput").value);
+      if (isNaN(exactVal) || exactVal < 0) return showToast("❌ Stock inválido");
+
+      try {
+        await updateDoc(doc(db, "products", stockEditingProductId), { stock: exactVal });
+        
+        const p = products.find(x => x.id === stockEditingProductId);
+        if (p) p.stock = exactVal;
+        
+        updateMetrics();
+        filterTable();
+        closeStockModal();
+        showToast("✅ Stock actualizado");
+      } catch (e) {
+        showToast("❌ Error al actualizar stock");
+      }
+    };
+
+    window.viewDetails = function(id) {
+      const p = products.find(x => x.id === id);
+      if (!p) return;
+
+      activeGalleryImages = getImagesArray(p);
+      document.getElementById("modalTitle").textContent = p.name || "Sin Nombre";
+      document.getElementById("modalId").textContent = "#" + p.id;
+      document.getElementById("modalCat").textContent = p.category || "General";
+      document.getElementById("modalPrice").textContent = "Bs " + Number(p.price || 0).toFixed(2);
+      document.getElementById("modalStock").textContent = (p.stock || 0) + " unidades";
+      document.getElementById("modalStatus").textContent = p.active ? "🟢 Visible" : "🔴 Oculto";
+      
+      document.getElementById("modalDesc").innerHTML = p.description || "Sin descripción.";
+
+      const gallery = document.getElementById("modalGallery");
+      if (activeGalleryImages.length) {
+        gallery.innerHTML = activeGalleryImages.map((img, idx) => `
+          <img src="${escapeHTML(img)}" class="modal-img" loading="lazy" onclick="openLightbox(${idx})">
+        `).join("");
+        gallery.style.display = "flex";
+      } else {
+        gallery.style.display = "none";
+      }
+
+      viewModal.classList.add("open");
+      history.pushState({ modalOpen: true }, "");
+    };
+
+    window.closeModal = function() {
+      if (viewModal.classList.contains('open')) {
+        viewModal.classList.remove("open");
+        if (history.state && history.state.modalOpen) history.back();
+      }
+    };
+
+    window.openLightbox = function(index) {
+      if (!activeGalleryImages || !activeGalleryImages.length) return;
+      activeImageIndex = index;
+      updateLightbox();
+      lightboxModal.classList.add("open");
+      history.pushState({ modalOpen: true }, "");
+    };
+
+    window.closeLightbox = function() {
+      if (lightboxModal.classList.contains('open')) {
+        lightboxModal.classList.remove("open");
+        if (history.state && history.state.modalOpen) history.back();
+      }
+    };
+
+    window.changeLightboxImg = function(step) {
+      activeImageIndex += step;
+      if (activeImageIndex < 0) activeImageIndex = activeGalleryImages.length - 1;
+      else if (activeImageIndex >= activeGalleryImages.length) activeImageIndex = 0;
+      updateLightbox();
+    };
+
+    function updateLightbox() {
+      lightboxImg.src = activeGalleryImages[activeImageIndex];
+      lightboxCounter.textContent = `${activeImageIndex + 1} / ${activeGalleryImages.length}`;
+    }
+
+    function getImagesArray(product) {
+      let list = [];
+      if (Array.isArray(product.images)) list = product.images;
+      else if (typeof product.images === 'string') {
+        try { list = JSON.parse(product.images); } catch(e){}
+      } else if (product.image) list = [product.image];
+      return list;
+    }
+
+    function compressImage(file, maxDimension = 800, quality = 0.8) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = () => {
+            let width = img.width, height = img.height;
+            if (width > height) {
+              if (width > maxDimension) { height = Math.round((height * maxDimension) / width); width = maxDimension; }
+            } else {
+              if (height > maxDimension) { width = Math.round((width * maxDimension) / height); height = maxDimension; }
+            }
+            const canvas = document.createElement("canvas");
+            canvas.width = width; canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, width, height);
+            canvas.toBlob((blob) => { blob ? resolve(blob) : reject(new Error("Blob error")); }, "image/jpeg", quality);
+          };
+          img.onerror = err => reject(err);
+        };
+        reader.onerror = err => reject(err);
+      });
+    }
+
+    async function uploadToCloudinary(fileBlob) {
+      const formData = new FormData();
+      formData.append("file", fileBlob);
+      formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+      
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+        method: "POST",
+        body: formData
+      });
+      const data = await response.json();
+      if (data.secure_url) return data.secure_url;
+      else throw new Error(data.error?.message || "Error al subir a Cloudinary");
+    }
+
+    async function handleFileSelect(event) {
+      const files = Array.from(event.target.files);
+      if (!files.length) return;
+
+      const maxDim = parseInt(document.getElementById("imgQuality").value || "800");
+      const saveBtn = document.getElementById("saveBtn");
+      saveBtn.disabled = true;
+      saveBtn.textContent = "⏳ Subiendo fotos...";
+
+      const uploadPromises = files.map(async (file) => {
+        try {
+          const compressedBlob = await compressImage(file, maxDim, 0.8);
+          return await uploadToCloudinary(compressedBlob);
+        } catch (err) {
+          showToast(`❌ Error con ${file.name}`);
+          return null;
+        }
+      });
+
+      try {
+        const results = await Promise.all(uploadPromises);
+        const successfulUrls = results.filter(url => url !== null);
+        if (successfulUrls.length > 0) {
+          currentImages.push(...successfulUrls);
+          renderImagePreviews();
+          showToast(`📷 ${successfulUrls.length} foto(s) subida(s)`);
+        }
+      } catch (err) {
+        showToast("❌ Error general en subida");
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "💾 Guardar e Insertar al Catálogo";
+        document.getElementById("fileInput").value = "";
+        document.getElementById("cameraInput").value = "";
+      }
+    }
+
+    document.getElementById("fileInput").addEventListener("change", handleFileSelect);
+    document.getElementById("cameraInput").addEventListener("change", handleFileSelect);
+
+    function renderImagePreviews() {
+      previewContainer.innerHTML = currentImages.map((img, idx) => `
+        <div class="preview-thumb-wrap" data-id="${idx}">
+          <img src="${escapeHTML(img)}" class="prev-thumb" style="width:64px;height:64px;border-radius:10px;object-fit:cover;border:1px solid var(--border-color);">
+          ${idx === 0 ? '<span class="badge-main">PORTADA</span>' : ''}
+          <button type="button" class="preview-remove" onclick="removeImage(${idx})">✕</button>
+        </div>
+      `).join("");
+      initSortable();
+    }
+
+    function initSortable() {
+      if (sortableInstance) sortableInstance.destroy();
+      sortableInstance = new Sortable(previewContainer, {
+        animation: 150,
+        onEnd: function () {
+          const newArr = [];
+          previewContainer.querySelectorAll('.preview-thumb-wrap').forEach(el => {
+            newArr.push(currentImages[parseInt(el.getAttribute('data-id'))]);
+          });
+          currentImages = newArr;
+          renderImagePreviews();
+        }
+      });
+    }
+
+    window.removeImage = function(idx) {
+      currentImages.splice(idx, 1);
+      renderImagePreviews();
+    };
+
+    window.addStockShortcut = function(amount) {
+      stockInput.value = Math.max(0, Number(stockInput.value || 0) + amount);
+    };
+
+    productForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const saveBtn = document.getElementById("saveBtn");
+      saveBtn.disabled = true;
+      saveBtn.textContent = "⏳ Guardando...";
+
+      const id = productId.value;
+      const descriptionHtml = quill.root.innerHTML;
+
+      const existingProduct = id ? products.find(x => x.id === id) : null;
+      const createdAtTimestamp = existingProduct?.createdAt || Date.now();
+
+      const payload = {
+        name: nameInput.value.trim(),
+        category: categorySelect.value.trim(),
+        price: parseFloat(priceInput.value),
+        stock: parseInt(stockInput.value),
+        description: descriptionHtml,
+        active: activeSelect.value === "true",
+        images: currentImages,
+        image: currentImages[0] || null,
+        createdAt: createdAtTimestamp
+      };
+
+      try {
+        if (id) {
+          await updateDoc(doc(db, "products", id), payload);
+        } else {
+          await addDoc(collection(db, "products"), payload);
+        }
+
+        showToast("✅ ¡Producto guardado!");
+        resetForm();
+        await loadInventory(); 
+        switchTab('tab-list'); 
+      } catch (error) {
+        showToast("❌ Error al guardar: " + error.message);
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "💾 Guardar e Insertar al Catálogo";
+      }
+    });
+
+    window.editProduct = function(id) {
+      const p = products.find(x => x.id === id);
+      if (!p) return;
+
+      productId.value = p.id;
+      nameInput.value = p.name || "";
+      
+      const catVal = p.category || "";
+      let exists = Array.from(categorySelect.options).some(opt => opt.value.toLowerCase() === catVal.toLowerCase());
+      if (catVal && !exists) categorySelect.add(new Option(`📦 ${catVal}`, catVal));
+      categorySelect.value = catVal;
+
+      priceInput.value = p.price || "";
+      stockInput.value = p.stock || 0;
+      
+      quill.root.innerHTML = p.description || "";
+
+      activeSelect.value = String(p.active);
+
+      currentImages = getImagesArray(p);
+      renderImagePreviews();
+
+      formTitle.querySelector("span").textContent = "✏️ Editar Producto";
+      cancelEditBtn.style.display = "inline-block";
+      switchTab('tab-form');
+    };
+
+    window.resetForm = function() {
+      productId.value = "";
+      productForm.reset();
+      quill.setText('');
+      currentImages = [];
+      previewContainer.innerHTML = "";
+      formTitle.querySelector("span").textContent = "📦 Agregar Producto";
+      cancelEditBtn.style.display = "none";
+    };
+
+    /* BOTONES RÁPIDOS DE STOCK EN TABLA */
+    window.quickStockChange = async function(id, delta) {
+      const p = products.find(x => x.id === id);
+      if (!p) return;
+      const newStock = Math.max(0, Number(p.stock || 0) + delta);
+      try {
+        await updateDoc(doc(db, "products", id), { stock: newStock });
+        
+        p.stock = newStock;
+        updateMetrics();
+        filterTable();
+      } catch (error) {
+        showToast("❌ Error al actualizar stock");
+      }
+    };
+
+    /* CAMBIO DE ESTADO ACTIVO/OCULTO */
+    window.toggleActive = async function(id, newStatus) {
+      try {
+        await updateDoc(doc(db, "products", id), { active: newStatus });
+        
+        const p = products.find(x => x.id === id);
+        if (p) p.active = newStatus;
+        
+        updateMetrics();
+        filterTable();
+        showToast(newStatus ? "🟢 Visible" : "🔴 Oculto");
+      } catch (error) {
+        showToast("❌ Error de estado");
+      }
+    };
+
+    window.deleteProductPrompt = function(id) {
+      showToast("⚠️ ¿Eliminar permanentemente?", () => deleteProduct(id), "Sí, eliminar");
+    };
+
+    async function deleteProduct(id) {
+      try {
+        await deleteDoc(doc(db, "products", id));
+        showToast("🗑️ Eliminado");
+        loadInventory();
+      } catch (error) {
+        showToast("❌ Error al eliminar");
+      }
+    }
+
+    function escapeHTML(str) {
+      return String(str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    window.addEventListener('popstate', () => {
+      if (lightboxModal.classList.contains('open')) { lightboxModal.classList.remove('open'); return; }
+      if (viewModal.classList.contains('open')) viewModal.classList.remove('open');
+      if (document.getElementById("categoryModal").classList.contains('open')) closeCategoryModal();
+      if (document.getElementById("stockModal").classList.contains('open')) closeStockModal();
+    });
+  </script>
 </body>
 </html>
