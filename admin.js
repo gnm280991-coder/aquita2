@@ -50,7 +50,7 @@ form.addEventListener("submit", async (e) => {
         const datosImagen = await respuestaCloudinary.json();
 
         if (!datosImagen.secure_url) {
-            throw new Error("Cloudinary no devolvió la URL: " + JSON.stringify(datosImagen));
+            throw new Error("Cloudinary error: " + (datosImagen.error ? datosImagen.error.message : JSON.stringify(datosImagen)));
         }
 
         mensajeEstado.textContent = "Guardando producto en Firestore...";
