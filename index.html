@@ -165,17 +165,28 @@
     }
     .category-select:focus { border-color: var(--accent-color); }
 
-    /* CONTENEDOR PRINCIPAL Y GRID */
+    /* CONTENEDOR PRINCIPAL Y GRID MEJORADO PARA MÓVILES */
     .main-container {
       max-width: 1000px;
       margin: 16px auto;
-      padding: 0 16px;
+      padding: 0 10px; /* Ajustado para ganar espacio lateral en celulares */
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 14px;
+      grid-template-columns: repeat(2, 1fr); /* Fuerza 2 columnas estrictas en móviles */
+      gap: 10px;
+    }
+
+    /* En pantallas medianas o PC, vuelve al diseño automático flexible */
+    @media (min-width: 600px) {
+      .grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 14px;
+      }
+      .main-container {
+        padding: 0 16px;
+      }
     }
 
     .prod-card {
@@ -791,14 +802,29 @@
       grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">⏳ Cargando catálogo...</div>`;
 
       try {
-        const querySnapshot = await getDocs(collection(db, "products"));
-        products = [];
-        querySnapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          if (data.active === true) products.push({ id: docSnap.id, ...data });
-        });
+        // Verificar si tenemos caché local válida (10 minutos)
+        const cachedData = localStorage.getItem("aqui_ta_products_cache");
+        const cachedTime = localStorage.getItem("aqui_ta_products_time");
+        const tenMinutes = 10 * 60 * 1000;
 
-        products.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        if (cachedData && cachedTime && (Date.now() - Number(cachedTime) < tenMinutes)) {
+          products = JSON.parse(cachedData);
+        } else {
+          // Si no hay caché o expiró, consultamos a Firebase una vez
+          const querySnapshot = await getDocs(collection(db, "products"));
+          products = [];
+          querySnapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            if (data.active === true) products.push({ id: docSnap.id, ...data });
+          });
+
+          products.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+          
+          // Guardar en caché local
+          localStorage.setItem("aqui_ta_products_cache", JSON.stringify(products));
+          localStorage.setItem("aqui_ta_products_time", Date.now().toString());
+        }
+
         currentCategory = 'all';
         displayedLimit = 12;
 
