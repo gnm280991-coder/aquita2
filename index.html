@@ -695,7 +695,7 @@
   <!-- FIREBASE SDK V10 -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, doc, runTransaction, query, where, orderBy, limit, startAfter } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, doc, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyAj_ZTJwiNL3cZIKU2L-RlaLyO_vO68oGc",
@@ -713,11 +713,7 @@
 
     let products = [];
     let filteredProducts = [];
-    const PAGE_SIZE = 12;
     let displayedLimit = 12;
-    let lastProductDoc = null;
-    let hasMoreProducts = true;
-    let isLoadingProducts = false;
     let cart = [];
     let currentCategory = 'all';
     let currentSelectedProduct = null;
@@ -790,120 +786,32 @@
       btn.textContent = isLight ? "☀️" : "🌙";
     }
 
-    async function loadCatalog(reset = true) {
+    async function loadCatalog() {
       const grid = document.getElementById("catalogGrid");
-      const loadMoreWrap = document.getElementById("loadMoreWrap");
-      const loadMoreBtn = loadMoreWrap?.querySelector("button");
-
-      if (isLoadingProducts) return;
-      isLoadingProducts = true;
-
-      if (reset) {
-        products = [];
-        filteredProducts = [];
-        displayedLimit = PAGE_SIZE;
-        lastProductDoc = null;
-        hasMoreProducts = true;
-        currentCategory = 'all';
-        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-muted);">⏳ Cargando catálogo...</div>`;
-      }
-
-      if (!hasMoreProducts) {
-        isLoadingProducts = false;
-        return;
-      }
-
-      if (loadMoreBtn) {
-        loadMoreBtn.disabled = true;
-        loadMoreBtn.textContent = "⏳ Cargando...";
-      }
+      grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">⏳ Cargando catálogo...</div>`;
 
       try {
-        const productsRef = collection(db, "products");
-
-        // IMPORTANTE:
-        // Solo se descargan 12 productos activos por petición.
-        // startAfter() continúa desde el último documento recibido.
-        let q;
-
-        if (currentCategory !== 'all') {
-          q = lastProductDoc
-            ? query(
-                productsRef,
-                where("active", "==", true),
-                where("category", "==", currentCategory),
-                orderBy("createdAt", "desc"),
-                startAfter(lastProductDoc),
-                limit(PAGE_SIZE)
-              )
-            : query(
-                productsRef,
-                where("active", "==", true),
-                where("category", "==", currentCategory),
-                orderBy("createdAt", "desc"),
-                limit(PAGE_SIZE)
-              );
-        } else {
-          q = lastProductDoc
-            ? query(
-                productsRef,
-                where("active", "==", true),
-                orderBy("createdAt", "desc"),
-                startAfter(lastProductDoc),
-                limit(PAGE_SIZE)
-              )
-            : query(
-                productsRef,
-                where("active", "==", true),
-                orderBy("createdAt", "desc"),
-                limit(PAGE_SIZE)
-              );
-        }
-
-        const snapshot = await getDocs(q);
-
-        snapshot.forEach((docSnap) => {
-          products.push({ id: docSnap.id, ...docSnap.data() });
+        const querySnapshot = await getDocs(collection(db, "products"));
+        products = [];
+        querySnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          if (data.active === true) products.push({ id: docSnap.id, ...data });
         });
 
-        if (snapshot.docs.length > 0) {
-          lastProductDoc = snapshot.docs[snapshot.docs.length - 1];
-        }
-
-        // Si llegaron menos de 12, ya no hay más en esta consulta.
-        hasMoreProducts = snapshot.docs.length === PAGE_SIZE;
-
-        // Mantener orden por fecha por seguridad.
-        products.sort((a, b) => {
-          const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : Number(a.createdAt || 0);
-          const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : Number(b.createdAt || 0);
-          return bTime - aTime;
-        });
+        products.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        currentCategory = 'all';
+        displayedLimit = 12;
 
         populateCategories();
         filterProducts();
-
-        loadMoreWrap.style.display = hasMoreProducts ? "block" : "none";
       } catch (e) {
-        console.error("Error cargando productos:", e);
-
-        if (products.length === 0) {
-          grid.innerHTML = `
-            <div style="grid-column:1/-1; background:#1e293b; border:1px solid #ef4444; border-radius:12px; padding:20px; text-align:center; color:#f8fafc;">
-              <div style="color:#ef4444; font-weight:800; font-size:15px; margin-bottom:8px;">❌ Error de conexión o permisos con Firebase</div>
-              <div style="font-size:12px; color:#94a3b8; word-break:break-all; background:#0f172a; padding:10px; border-radius:8px; margin-top:8px; text-align:left;"><b>Mensaje:</b> ${escapeHTML(e.message)}</div>
-              <button onclick="reloadPage()" style="margin-top:14px; background:#ff9d00; color:#0f172a; border:0; padding:8px 16px; border-radius:8px; font-weight:700; cursor:pointer;">🔄 Reintentar</button>
-            </div>
-          `;
-        }
-
-        loadMoreWrap.style.display = products.length ? "block" : "none";
-      } finally {
-        isLoadingProducts = false;
-        if (loadMoreBtn) {
-          loadMoreBtn.disabled = false;
-          loadMoreBtn.textContent = "📂 Cargar más productos";
-        }
+        grid.innerHTML = `
+          <div style="grid-column: 1/-1; background: #1e293b; border: 1px solid #ef4444; border-radius: 12px; padding: 20px; text-align: center; color: #f8fafc;">
+            <div style="color: #ef4444; font-weight: 800; font-size: 15px; margin-bottom: 8px;">❌ Error de conexión o permisos con Firebase</div>
+            <div style="font-size: 12px; color: #94a3b8; word-break: break-all; background: #0f172a; padding: 10px; border-radius: 8px; margin-top: 8px; text-align: left;"><b>Mensaje:</b> ${e.message}</div>
+            <button onclick="reloadPage()" style="margin-top: 14px; background: #ff9d00; color: #0f172a; border: 0; padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer;">🔄 Reintentar</button>
+          </div>
+        `;
       }
     }
 
@@ -917,43 +825,19 @@
       select.innerHTML = html;
     }
 
-    window.selectCategory = async (cat) => {
-      currentCategory = cat;
-      displayedLimit = PAGE_SIZE;
-      lastProductDoc = null;
-      hasMoreProducts = true;
-      products = [];
-      filteredProducts = [];
-
-      await loadCatalog(true);
-    };
-
-    window.loadMoreProducts = async () => {
-      if (isLoadingProducts || !hasMoreProducts) return;
-
-      // Ya mostramos todos los productos descargados.
-      displayedLimit += PAGE_SIZE;
-
-      // Si necesitamos más datos, descarga SOLO la siguiente página de 12.
-      if (displayedLimit > products.length) {
-        await loadCatalog(false);
-      } else {
-        renderCatalog();
-      }
-    };
+    window.selectCategory = (cat) => { currentCategory = cat; displayedLimit = 12; filterProducts(); }
+    window.loadMoreProducts = () => { displayedLimit += 12; renderCatalog(); }
 
     window.filterProducts = function() {
-      const queryText = document.getElementById("searchInput").value.toLowerCase().trim();
-
+      const query = document.getElementById("searchInput").value.toLowerCase();
+      displayedLimit = 12;
       filteredProducts = products.filter(p => {
         const matchesCat = currentCategory === 'all' || p.category === currentCategory;
         const text = [p.name, p.category, p.description].filter(Boolean).join(" ").toLowerCase();
-        return matchesCat && (!queryText || text.includes(queryText));
+        return matchesCat && (!query || text.includes(query));
       });
-
-      displayedLimit = Math.max(PAGE_SIZE, displayedLimit);
       renderCatalog();
-    };
+    }
 
     function renderCatalog() {
       const grid = document.getElementById("catalogGrid");
@@ -989,8 +873,7 @@
         `;
       }).join("");
 
-      loadMoreWrap.style.display =
-        hasMoreProducts && filteredProducts.length >= 0 ? "block" : "none";
+      loadMoreWrap.style.display = filteredProducts.length > displayedLimit ? "block" : "none";
     }
 
     window.addToCart = function(id) {
