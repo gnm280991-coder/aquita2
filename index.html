@@ -550,7 +550,11 @@
       document.getElementById("cartCount").textContent = cart.reduce((acc, item) => acc + item.qty, 0);
     }
 
-    window.openCartModal = () => { renderCart(); document.getElementById("cartModal").classList.add("open"); }
+    window.openCartModal = () => { 
+      renderCart(); 
+      document.getElementById("cartModal").classList.add("open");
+      history.pushState({ modalOpen: true }, "");
+    }
 
     function renderCart() {
       const cartList = document.getElementById("cartList");
@@ -632,11 +636,15 @@
       }
 
       document.getElementById("viewModal").classList.add("open");
+      history.pushState({ modalOpen: true }, "");
     }
 
     window.closeModal = function(id) {
       const modal = document.getElementById(id);
-      if (modal) modal.classList.remove('open');
+      if (modal && modal.classList.contains('open')) {
+        modal.classList.remove('open');
+        history.back();
+      }
     }
 
     window.openLightbox = function(index) {
@@ -645,9 +653,15 @@
       activeImageIndex = index;
       updateLightbox();
       lightboxModal.classList.add("open");
+      history.pushState({ modalOpen: true }, "");
     }
 
-    window.closeLightbox = () => lightboxModal.classList.remove('open');
+    window.closeLightbox = () => {
+      if (lightboxModal.classList.contains('open')) {
+        lightboxModal.classList.remove('open');
+        history.back();
+      }
+    }
 
     window.changeLightboxImg = function(step) {
       activeImageIndex = (activeImageIndex + step + activeGalleryImages.length) % activeGalleryImages.length;
@@ -688,6 +702,21 @@
     function escapeHTML(str) {
       return String(str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
+
+    // Gestionar el botón "Atrás" del navegador/celular de forma limpia
+    window.addEventListener("popstate", (event) => {
+      const viewModal = document.getElementById("viewModal");
+      const cartModal = document.getElementById("cartModal");
+      const lightboxModal = document.getElementById("lightboxModal");
+
+      if (lightboxModal.classList.contains("open")) {
+        lightboxModal.classList.remove("open");
+      } else if (viewModal.classList.contains("open")) {
+        viewModal.classList.remove("open");
+      } else if (cartModal.classList.contains("open")) {
+        cartModal.classList.remove("open");
+      }
+    });
 
     document.addEventListener("DOMContentLoaded", async () => {
       initTheme();
