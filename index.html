@@ -307,7 +307,7 @@
       <div id="modalDesc" class="detail-desc"></div>
 
       <button id="modalAddBtn" class="btn-add-modal" onclick="addCurrentProductToCart()">🛒 Agregar al Carrito</button>
-      <button class="btn-ws" onclick="orderSingleWhatsapp()">💬 Pedir directamente</button>
+      <button class="btn-ws" onclick="orderSingleWhatsapp()">💬 Pedir directamente con foto</button>
     </div>
   </div>
 
@@ -590,7 +590,13 @@
       cart.forEach((item, index) => {
         const sub = (item.price || 0) * item.qty;
         total += sub;
+        const images = getImagesArray(item);
+        const portadaImg = images.length > 0 ? images[0] : '';
+        
         msg += `${index + 1}. *${item.name}* x${item.qty} - Bs ${sub.toFixed(2)}\n`;
+        if (portadaImg) {
+          msg += `   📸 Foto: ${portadaImg}\n`;
+        }
       });
       msg += `\n*Total a pagar: Bs ${total.toFixed(2)}*\n\n¿Me confirman la disponibilidad para coordinar el envío?`;
       window.open(`https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
@@ -655,7 +661,19 @@
 
     window.orderSingleWhatsapp = function() {
       if (!currentSelectedProduct) return;
-      const msg = `¡Hola! Quisiera comprar el producto: *${currentSelectedProduct.name}* (Bs ${Number(currentSelectedProduct.price).toFixed(2)}). ¿Tienen disponibilidad?`;
+      const images = getImagesArray(currentSelectedProduct);
+      const portadaImg = images.length > 0 ? images[0] : '';
+
+      let msg = `¡Hola! Quisiera comprar el producto:\n\n` +
+                `*${currentSelectedProduct.name}*\n` +
+                `💵 Precio: Bs ${Number(currentSelectedProduct.price || 0).toFixed(2)}\n`;
+      
+      if (portadaImg) {
+        msg += `📸 Ver foto: ${portadaImg}\n\n`;
+      }
+      
+      msg += `¿Tienen disponibilidad?`;
+
       window.open(`https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
     }
 
