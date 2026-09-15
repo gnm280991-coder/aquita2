@@ -297,21 +297,6 @@
     body.dark-mode .quill-container .ql-fill { fill: #fff !important; }
     body.dark-mode .quill-container .ql-picker { color: #fff !important; }
 
-    .chips-wrap { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
-
-    .chip-btn {
-      background: var(--bg-main);
-      border: 1px solid var(--border-color);
-      color: var(--text-main);
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    .chip-btn:active { transform: scale(0.95); }
-
     .preview-container { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; min-height: 74px; }
     .preview-thumb-wrap { position: relative; cursor: grab; }
     .preview-thumb-wrap:active { cursor: grabbing; }
@@ -650,11 +635,12 @@
             <div class="form-group">
               <label>Stock (Unidades) *</label>
               <input type="number" id="stock" min="0" required placeholder="1" inputmode="numeric">
-              <div class="chips-wrap">
-                <button type="button" class="chip-btn" onclick="addStockShortcut(5)">+5</button>
-                <button type="button" class="chip-btn" onclick="addStockShortcut(10)">+10</button>
-                <button type="button" class="chip-btn" onclick="addStockShortcut(20)">+20</button>
-                <button type="button" class="chip-btn" onclick="addStockShortcut(50)">+50</button>
+              <!-- Botones directos con estilo directo para evitar depender de clases huérfanas -->
+              <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
+                <button type="button" class="btn-cancel" style="padding: 6px 12px; font-size: 12px; font-weight: 600;" onclick="addStockShortcut(5)">+5</button>
+                <button type="button" class="btn-cancel" style="padding: 6px 12px; font-size: 12px; font-weight: 600;" onclick="addStockShortcut(10)">+10</button>
+                <button type="button" class="btn-cancel" style="padding: 6px 12px; font-size: 12px; font-weight: 600;" onclick="addStockShortcut(20)">+20</button>
+                <button type="button" class="btn-cancel" style="padding: 6px 12px; font-size: 12px; font-weight: 600;" onclick="addStockShortcut(50)">+50</button>
               </div>
             </div>
 
@@ -820,7 +806,7 @@
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getFirestore, collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // Configuración de Cloudinary e ImgBB (según corresponda en tu proyecto actual)
+    // Configuración activa de Cloudinary
     const CLOUDINARY_CLOUD_NAME = "rlrxdhzq";
     const CLOUDINARY_UPLOAD_PRESET = "presetnuevo";
 
@@ -850,6 +836,7 @@
       }
     });
 
+    // Opción 3 conservada intacta (Workaround táctil para Quill)
     setTimeout(() => {
       const cleanBtn = document.querySelector('.ql-clean');
       if (cleanBtn) {
@@ -1029,7 +1016,6 @@
           });
         });
 
-        // Ordenamos en memoria: los más recientes arriba
         products.sort((a, b) => b.createdAt - a.createdAt);
 
         document.getElementById("countBadge").textContent = products.length;
@@ -1385,6 +1371,7 @@
       const existingProduct = id ? products.find(x => x.id === id) : null;
       const createdAtTimestamp = existingProduct?.createdAt || Date.now();
 
+      // Se mantiene la propiedad 'image' por retrocompatibilidad con las opciones seleccionadas
       const payload = {
         name: nameInput.value.trim(),
         category: categorySelect.value.trim(),
@@ -1453,7 +1440,6 @@
       cancelEditBtn.style.display = "none";
     };
 
-    /* BOTONES RÁPIDOS DE STOCK EN TABLA */
     window.quickStockChange = async function(id, delta) {
       const p = products.find(x => x.id === id);
       if (!p) return;
@@ -1469,7 +1455,6 @@
       }
     };
 
-    /* CAMBIO DE ESTADO ACTIVO/OCULTO */
     window.toggleActive = async function(id, newStatus) {
       try {
         await updateDoc(doc(db, "products", id), { active: newStatus });
