@@ -133,7 +133,6 @@
 
     .main-container { max-width: 1200px; margin: 16px auto; padding: 0 12px; }
 
-    /* NAVEGACIÓN DE BARRAS DE CATEGORÍA */
     .category-header {
       display: flex;
       justify-content: space-between;
@@ -179,7 +178,6 @@
       gap: 6px;
     }
 
-    /* CARRUSEL TIPO NETFLIX */
     .category-section { margin-bottom: 24px; }
     .netflix-row {
       display: flex;
@@ -193,7 +191,6 @@
     .netflix-row::-webkit-scrollbar { height: 6px; }
     .netflix-row::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
 
-    /* GRILLA DE CATEGORÍA UNIFICADA */
     .grid-category-view {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -231,7 +228,6 @@
     body.light-mode .btn-add-card { background: #e2e8f0; color: #0f172a; }
     .btn-add-card:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* BOTONES FLOTANTES Y MODALES */
     .cart-float-btn { position: fixed; bottom: 20px; right: 20px; background: var(--accent-color); color: #0f172a; border: none; border-radius: 30px; padding: 12px 20px; font-weight: 800; font-size: 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 25px rgba(255, 157, 0, 0.4); cursor: pointer; z-index: 200; }
     .cart-badge { background: #0f172a; color: #fff; font-size: 12px; padding: 2px 8px; border-radius: 12px; }
 
@@ -384,7 +380,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, doc, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc, increment, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyAj_ZTJwiNL3cZIKU2L-RlaLyO_vO68oGc",
@@ -419,25 +415,11 @@
       renderNetflixCatalog(products);
     };
 
-    async function registrarVisita() {
-      const visitsElement = document.getElementById("visitsCount");
+    function registrarVisitaAsync() {
       const visitRef = doc(db, "stats", "visitas");
-      try {
-        let finalCount = 0;
-        await runTransaction(db, async (transaction) => {
-          const docSnap = await transaction.get(visitRef);
-          if (!docSnap.exists()) {
-            transaction.set(visitRef, { count: 1 });
-            finalCount = 1;
-          } else {
-            finalCount = (docSnap.data().count || 0) + 1;
-            transaction.update(visitRef, { count: finalCount });
-          }
-        });
-        if (visitsElement) visitsElement.textContent = finalCount.toLocaleString();
-      } catch (e) {
-        if (visitsElement) visitsElement.textContent = "—";
-      }
+      updateDoc(visitRef, { count: increment(1) })
+        .catch(() => setDoc(visitRef, { count: 1 }, { merge: true }))
+        .catch(() => {});
     }
 
     function loadSavedCart() {
@@ -474,35 +456,44 @@
     async function loadCatalog() {
       const container = document.getElementById("netflixContainer");
 
-      try {
-        const cachedData = localStorage.getItem("aqui_ta_products_cache");
-        const cachedTime = localStorage.getItem("aqui_ta_products_time");
-        const tenMinutes = 10 * 60 * 1000;
+      const cachedData = localStorage.getItem("aqui_ta_products_cache");
+      const cachedTime = localStorage.getItem("aqui_ta_products_time");
+      const tenMinutes = 10 * 60 * 1000;
 
-        if (cachedData && cachedTime && (Date.now() - Number(cachedTime) < tenMinutes)) {
-          products = JSON.parse(cachedData);
-        } else {
-          const querySnapshot = await getDocs(collection(db, "products"));
-          products = [];
-          querySnapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            if (data.active === true) products.push({ id: docSnap.id, ...data });
-          });
-          products.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-          
-          localStorage.setItem("aqui_ta_products_cache", JSON.stringify(products));
-          localStorage.setItem("aqui_ta_products_time", Date.now().toString());
+      if (cachedData) {
+        products = JSON.parse(cachedData);
+        populateCategoryDropdown();
+        renderNetflixCatalog(products);
+        
+        if (cachedTime && (Date.now() - Number(cachedTime) < tenMinutes)) {
+          return;
         }
+      }
+
+      try {
+        const querySnapshot = await getDocs(collection(db, "products"));
+        const newProducts = [];
+        querySnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          if (data.active === true) newProducts.push({ id: docSnap.id, ...data });
+        });
+        newProducts.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+        products = newProducts;
+        localStorage.setItem("aqui_ta_products_cache", JSON.stringify(products));
+        localStorage.setItem("aqui_ta_products_time", Date.now().toString());
 
         populateCategoryDropdown();
         renderNetflixCatalog(products);
       } catch (e) {
-        container.innerHTML = `
-          <div style="background: #1e293b; border: 1px solid #ef4444; border-radius: 12px; padding: 20px; text-align: center; color: #f8fafc;">
-            <div style="color: #ef4444; font-weight: 800; font-size: 15px; margin-bottom: 8px;">❌ Error de conexión con Firebase</div>
-            <button onclick="reloadPage()" style="margin-top: 14px; background: #ff9d00; color: #0f172a; border: 0; padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer;">🔄 Reintentar</button>
-          </div>
-        `;
+        if (!cachedData) {
+          container.innerHTML = `
+            <div style="background: #1e293b; border: 1px solid #ef4444; border-radius: 12px; padding: 20px; text-align: center; color: #f8fafc;">
+              <div style="color: #ef4444; font-weight: 800; font-size: 15px; margin-bottom: 8px;">❌ Error de conexión</div>
+              <button onclick="reloadPage()" style="margin-top: 14px; background: #ff9d00; color: #0f172a; border: 0; padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer;">🔄 Reintentar</button>
+            </div>
+          `;
+        }
       }
     }
 
@@ -825,11 +816,11 @@
       }
     });
 
-    document.addEventListener("DOMContentLoaded", async () => {
+    document.addEventListener("DOMContentLoaded", () => {
       initTheme();
       loadSavedCart();
-      await registrarVisita();
-      await loadCatalog();
+      loadCatalog();
+      registrarVisitaAsync();
     });
   </script>
 </body>
