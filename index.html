@@ -6,7 +6,6 @@
   <title>Aquí tái | Tienda Oficial</title>
 
   <style>
-    /* VARIABLES DE TEMA (MODO NOCTURNO POR DEFECTO) */
     :root {
       --bg-main: #0f172a;
       --bg-card: #1e293b;
@@ -17,11 +16,10 @@
       --whatsapp-color: #25d366;
       --danger-color: #ef4444;
       --new-color: #10b981;
-      --radius: 14px;
-      --shadow: 0 4px 12px rgba(0,0,0,0.15);
+      --radius: 12px;
+      --shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
 
-    /* VISTA TEMA CLARO */
     body.light-mode {
       --bg-main: #f1f5f9;
       --bg-card: #ffffff;
@@ -41,7 +39,6 @@
       transition: background-color 0.3s, color 0.3s;
     }
 
-    /* HEADER */
     header {
       background: var(--bg-card);
       border-bottom: 1px solid var(--border-color);
@@ -49,11 +46,10 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      transition: background-color 0.3s, border-color 0.3s;
     }
 
     .top-bar {
-      max-width: 1000px;
+      max-width: 1200px;
       margin: 0 auto 12px;
       display: flex;
       align-items: center;
@@ -86,7 +82,6 @@
       display: flex;
       align-items: center;
       gap: 5px;
-      white-space: nowrap;
     }
 
     .theme-toggle-btn {
@@ -101,11 +96,9 @@
       justify-content: center;
       font-size: 18px;
       cursor: pointer;
-      transition: all 0.2s;
     }
-    .theme-toggle-btn:active { transform: scale(0.9); }
 
-    .search-box { max-width: 1000px; margin: 0 auto; position: relative; }
+    .search-box { max-width: 1200px; margin: 0 auto; position: relative; }
     .search-input {
       width: 100%;
       padding: 10px 14px 10px 38px;
@@ -115,76 +108,71 @@
       color: var(--text-main);
       font-size: 14px;
       outline: none;
-      transition: background-color 0.3s, border-color 0.3s;
     }
     .search-input:focus { border-color: var(--accent-color); }
     .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; opacity: 0.6; }
 
-    .category-select-wrapper { max-width: 1000px; margin: 10px auto 0; }
-    .category-select {
-      width: 100%;
-      padding: 10px 14px;
-      background: var(--bg-main);
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      color: var(--text-main);
-      font-size: 14px;
-      font-weight: 600;
-      outline: none;
-      cursor: pointer;
-      appearance: none;
-      -webkit-appearance: none;
-      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff9d00' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-      background-repeat: no-repeat;
-      background-position: right 12px center;
-      background-size: 16px;
-    }
-    .category-select:focus { border-color: var(--accent-color); }
+    .main-container { max-width: 1200px; margin: 16px auto; padding: 0 12px; }
 
-    /* CONTENEDOR Y GRID MÓVIL 2 COLUMNAS */
-    .main-container { max-width: 1000px; margin: 16px auto; padding: 0 10px; }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
+    /* ESTILO TIPO NETFLIX POR CATEGORÍAS */
+    .category-section { margin-bottom: 24px; }
+    .category-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-main);
+      border-left: 4px solid var(--accent-color);
+      padding-left: 8px;
     }
-    @media (min-width: 600px) {
-      .grid {
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: 14px;
-      }
-      .main-container { padding: 0 16px; }
+
+    .netflix-row {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      padding-bottom: 10px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
     }
+
+    .netflix-row::-webkit-scrollbar { height: 6px; }
+    .netflix-row::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
 
     .prod-card {
+      flex: 0 0 140px;
+      scroll-snap-align: start;
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       border-radius: var(--radius);
-      padding: 10px;
+      padding: 8px;
       display: flex;
       flex-direction: column;
       position: relative;
       box-shadow: var(--shadow);
-      transition: transform .2s;
     }
-    .prod-card:hover { transform: translateY(-3px); }
 
-    .badge-out { position: absolute; top: 14px; right: 14px; background: var(--danger-color); color: #fff; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; z-index: 10; }
-    .badge-new { position: absolute; top: 14px; left: 14px; background: var(--new-color); color: #fff; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; z-index: 10; }
+    @media (min-width: 600px) {
+      .prod-card { flex: 0 0 170px; padding: 10px; }
+    }
 
-    .prod-img-wrap { width: 100%; height: 140px; background: var(--bg-main); border-radius: 10px; overflow: hidden; position: relative; cursor: pointer; }
+    .badge-out { position: absolute; top: 12px; right: 12px; background: var(--danger-color); color: #fff; font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; z-index: 10; }
+    .badge-new { position: absolute; top: 12px; left: 12px; background: var(--new-color); color: #fff; font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; z-index: 10; }
+
+    .prod-img-wrap { width: 100%; height: 120px; background: var(--bg-main); border-radius: 8px; overflow: hidden; cursor: pointer; }
+    @media (min-width: 600px) { .prod-img-wrap { height: 140px; } }
+    
     .prod-img { width: 100%; height: 100%; object-fit: cover; }
-    .prod-category { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-top: 8px; }
-    .prod-title { font-size: 13px; font-weight: 700; margin: 4px 0 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; cursor: pointer; }
-    .prod-price { font-size: 15px; font-weight: 800; color: var(--text-main); margin-top: auto; margin-bottom: 8px; }
+    .prod-title { font-size: 12px; font-weight: 700; margin: 6px 0 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; cursor: pointer; height: 32px; }
+    .prod-price { font-size: 14px; font-weight: 800; color: var(--accent-color); margin-bottom: 8px; }
 
-    .btn-add-card { width: 100%; background: #334155; color: #fff; border: 0; border-radius: 8px; padding: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .btn-add-card { width: 100%; background: #334155; color: #fff; border: 0; border-radius: 6px; padding: 6px; font-size: 11px; font-weight: 700; cursor: pointer; }
     body.light-mode .btn-add-card { background: #e2e8f0; color: #0f172a; }
-    .btn-add-card:disabled { opacity: 0.5; cursor: not-allowed; background: var(--bg-main) !important; color: var(--text-muted) !important; }
+    .btn-add-card:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    .load-more-wrap { text-align: center; margin-top: 24px; }
-    .btn-load-more { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; }
-
+    /* BOTONES FLOTANTES Y MODALES */
     .cart-float-btn { position: fixed; bottom: 20px; right: 20px; background: var(--accent-color); color: #0f172a; border: none; border-radius: 30px; padding: 12px 20px; font-weight: 800; font-size: 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 25px rgba(255, 157, 0, 0.4); cursor: pointer; z-index: 200; }
     .cart-badge { background: #0f172a; color: #fff; font-size: 12px; padding: 2px 8px; border-radius: 12px; }
 
@@ -250,22 +238,10 @@
       <span class="search-icon">🔍</span>
       <input type="text" id="searchInput" class="search-input" placeholder="Buscar producto..." oninput="filterProducts()">
     </div>
-
-    <div class="category-select-wrapper">
-      <select id="categorySelect" class="category-select" onchange="selectCategory(this.value)">
-        <option value="all">📂 Todas las categorías</option>
-      </select>
-    </div>
   </header>
 
-  <main class="main-container">
-    <div class="grid" id="catalogGrid">
-      <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">⏳ Cargando catálogo...</div>
-    </div>
-    
-    <div class="load-more-wrap" id="loadMoreWrap" style="display: none;">
-      <button class="btn-load-more" onclick="loadMoreProducts()">📂 Cargar más productos</button>
-    </div>
+  <main class="main-container" id="netflixContainer">
+    <div style="text-align: center; padding: 40px; color: var(--text-muted);">⏳ Cargando catálogo...</div>
   </main>
 
   <a href="#" id="wsDirectLink" class="ws-float-btn" target="_blank" title="Consultar por WhatsApp">
@@ -359,10 +335,7 @@
     const PHONE_NUMBER = "59171440907";
 
     let products = [];
-    let filteredProducts = [];
-    let displayedLimit = 12;
     let cart = [];
-    let currentCategory = 'all';
     let currentSelectedProduct = null;
     let activeGalleryImages = [];
     let activeImageIndex = 0;
@@ -428,8 +401,7 @@
     }
 
     async function loadCatalog() {
-      const grid = document.getElementById("catalogGrid");
-      grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">⏳ Cargando catálogo...</div>`;
+      const container = document.getElementById("netflixContainer");
 
       try {
         const cachedData = localStorage.getItem("aqui_ta_products_cache");
@@ -451,14 +423,10 @@
           localStorage.setItem("aqui_ta_products_time", Date.now().toString());
         }
 
-        currentCategory = 'all';
-        displayedLimit = 12;
-
-        populateCategories();
-        filterProducts();
+        renderNetflixCatalog(products);
       } catch (e) {
-        grid.innerHTML = `
-          <div style="grid-column: 1/-1; background: #1e293b; border: 1px solid #ef4444; border-radius: 12px; padding: 20px; text-align: center; color: #f8fafc;">
+        container.innerHTML = `
+          <div style="background: #1e293b; border: 1px solid #ef4444; border-radius: 12px; padding: 20px; text-align: center; color: #f8fafc;">
             <div style="color: #ef4444; font-weight: 800; font-size: 15px; margin-bottom: 8px;">❌ Error de conexión con Firebase</div>
             <button onclick="reloadPage()" style="margin-top: 14px; background: #ff9d00; color: #0f172a; border: 0; padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer;">🔄 Reintentar</button>
           </div>
@@ -466,65 +434,80 @@
       }
     }
 
-    function populateCategories() {
-      const categories = [...new Set(products.map(p => p.category).filter(Boolean))].sort();
-      const select = document.getElementById("categorySelect");
-      let html = `<option value="all" ${currentCategory === 'all' ? 'selected' : ''}>📂 Todas las categorías</option>`;
-      categories.forEach(cat => {
-        html += `<option value="${escapeHTML(cat)}" ${currentCategory === cat ? 'selected' : ''}>🏷️ ${escapeHTML(cat)}</option>`;
-      });
-      select.innerHTML = html;
-    }
-
-    window.selectCategory = (cat) => { currentCategory = cat; displayedLimit = 12; filterProducts(); }
-    window.loadMoreProducts = () => { displayedLimit += 12; renderCatalog(); }
-
     window.filterProducts = function() {
-      const query = document.getElementById("searchInput").value.toLowerCase();
-      displayedLimit = 12;
-      filteredProducts = products.filter(p => {
-        const matchesCat = currentCategory === 'all' || p.category === currentCategory;
+      const query = document.getElementById("searchInput").value.toLowerCase().trim();
+      if (!query) {
+        renderNetflixCatalog(products);
+        return;
+      }
+      const filtered = products.filter(p => {
         const text = [p.name, p.category, p.description].filter(Boolean).join(" ").toLowerCase();
-        return matchesCat && (!query || text.includes(query));
+        return text.includes(query);
       });
-      renderCatalog();
+      renderNetflixCatalog(filtered, true);
     }
 
-    function renderCatalog() {
-      const grid = document.getElementById("catalogGrid");
-      const loadMoreWrap = document.getElementById("loadMoreWrap");
+    function renderNetflixCatalog(itemsToRender, isSearching = false) {
+      const container = document.getElementById("netflixContainer");
 
-      if (!filteredProducts.length) {
-        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:var(--text-muted); padding:30px;">No hay productos disponibles.</div>`;
-        loadMoreWrap.style.display = "none";
+      if (!itemsToRender.length) {
+        container.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:30px;">No se encontraron productos.</div>`;
         return;
       }
 
-      const currentList = filteredProducts.slice(0, displayedLimit);
-      grid.innerHTML = currentList.map((p, index) => {
-        const images = getImagesArray(p);
-        const mainImg = images[0] || 'https://via.placeholder.com/300?text=Aquí+tái';
-        const stock = Number(p.stock || 0);
-        const isOutOfStock = stock <= 0;
-        const isNew = index < 4;
-
-        return `
-          <div class="prod-card">
-            ${isOutOfStock ? '<span class="badge-out">Agotado</span>' : (isNew ? '<span class="badge-new">¡Nuevo!</span>' : '')}
-            <div class="prod-img-wrap" onclick="openModal('${p.id}')">
-              <img class="prod-img" src="${escapeHTML(mainImg)}" alt="${escapeHTML(p.name)}" loading="lazy" decoding="async">
+      // Si está buscando, muestra los resultados en una sola lista
+      if (isSearching) {
+        container.innerHTML = `
+          <div class="category-section">
+            <div class="category-title">🔍 Resultados de la búsqueda</div>
+            <div class="netflix-row" style="flex-wrap: wrap;">
+              ${itemsToRender.map(p => createCardHTML(p)).join("")}
             </div>
-            <span class="prod-category">${escapeHTML(p.category || 'General')}</span>
-            <div class="prod-title" onclick="openModal('${p.id}')">${escapeHTML(p.name)}</div>
-            <div class="prod-price">Bs ${Number(p.price || 0).toFixed(2)}</div>
-            <button class="btn-add-card" onclick="addToCart('${p.id}')" ${isOutOfStock ? 'disabled' : ''}>
-              ${isOutOfStock ? '❌ Agotado' : '+ Agregar al carrito'}
-            </button>
           </div>
         `;
-      }).join("");
+        return;
+      }
 
-      loadMoreWrap.style.display = filteredProducts.length > displayedLimit ? "block" : "none";
+      // Agrupar por categoría estilo Netflix
+      const categories = [...new Set(itemsToRender.map(p => p.category || "General"))].sort();
+      let html = "";
+
+      categories.forEach(cat => {
+        const catProducts = itemsToRender.filter(p => (p.category || "General") === cat);
+        if (catProducts.length) {
+          html += `
+            <div class="category-section">
+              <div class="category-title">🏷️ ${escapeHTML(cat)}</div>
+              <div class="netflix-row">
+                ${catProducts.map(p => createCardHTML(p)).join("")}
+              </div>
+            </div>
+          `;
+        }
+      });
+
+      container.innerHTML = html;
+    }
+
+    function createCardHTML(p) {
+      const images = getImagesArray(p);
+      const mainImg = images[0] || 'https://via.placeholder.com/200?text=Aquí+tái';
+      const stock = Number(p.stock || 0);
+      const isOutOfStock = stock <= 0;
+
+      return `
+        <div class="prod-card">
+          ${isOutOfStock ? '<span class="badge-out">Agotado</span>' : ''}
+          <div class="prod-img-wrap" onclick="openModal('${p.id}')">
+            <img class="prod-img" src="${escapeHTML(mainImg)}" alt="${escapeHTML(p.name)}" loading="lazy" decoding="async">
+          </div>
+          <div class="prod-title" onclick="openModal('${p.id}')">${escapeHTML(p.name)}</div>
+          <div class="prod-price">Bs ${Number(p.price || 0).toFixed(2)}</div>
+          <button class="btn-add-card" onclick="addToCart('${p.id}')" ${isOutOfStock ? 'disabled' : ''}>
+            ${isOutOfStock ? 'Agotado' : '+ Agregar'}
+          </button>
+        </div>
+      `;
     }
 
     window.addToCart = function(id) {
@@ -598,9 +581,7 @@
         const portadaImg = images.length > 0 ? images[0] : '';
         
         msg += `${index + 1}. *${item.name}* x${item.qty} - Bs ${sub.toFixed(2)}\n`;
-        if (portadaImg) {
-          msg += `   📸 Foto: ${portadaImg}\n`;
-        }
+        if (portadaImg) msg += `   📸 Foto: ${portadaImg}\n`;
       });
       msg += `\n*Total a pagar: Bs ${total.toFixed(2)}*\n\n¿Me confirman la disponibilidad para coordinar el envío?`;
       window.open(`https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
@@ -682,10 +663,7 @@
                 `*${currentSelectedProduct.name}*\n` +
                 `💵 Precio: Bs ${Number(currentSelectedProduct.price || 0).toFixed(2)}\n`;
       
-      if (portadaImg) {
-        msg += `📸 Ver foto: ${portadaImg}\n\n`;
-      }
-      
+      if (portadaImg) msg += `📸 Ver foto: ${portadaImg}\n\n`;
       msg += `¿Tienen disponibilidad?`;
 
       window.open(`https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
@@ -703,8 +681,7 @@
       return String(str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
 
-    // Gestionar el botón "Atrás" del navegador/celular de forma limpia
-    window.addEventListener("popstate", (event) => {
+    window.addEventListener("popstate", () => {
       const viewModal = document.getElementById("viewModal");
       const cartModal = document.getElementById("cartModal");
       const lightboxModal = document.getElementById("lightboxModal");
