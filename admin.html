@@ -1326,6 +1326,7 @@
       else throw new Error(data.error?.message || "Error al subir a Cloudinary");
     }
 
+    /* MANEJO DE FOTOS CON CÁMARA ACUMULATIVA */
     async function handleFileSelect(event) {
       const files = Array.from(event.target.files);
       if (!files.length) return;
@@ -1358,8 +1359,8 @@
       } finally {
         saveBtn.disabled = false;
         saveBtn.textContent = "💾 Guardar e Insertar al Catálogo";
-        document.getElementById("fileInput").value = "";
-        document.getElementById("cameraInput").value = "";
+        // Limpia el input para permitir volver a presionar la cámara y sumar otra foto
+        event.target.value = "";
       }
     }
 
