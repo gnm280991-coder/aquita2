@@ -118,24 +118,47 @@
       cursor: pointer;
     }
 
-    /* 🎁 Banner Promocional */
-    .promo-banner {
+    /* 🎁 Banner Promocional Rotativo Horizontal */
+    .promo-banner-wrapper {
       background: linear-gradient(135deg, #ff9d00, #ff6c00);
       color: #000;
       border-radius: var(--radius);
-      padding: 12px 16px;
-      font-weight: 800;
-      font-size: 14px;
-      text-align: center;
+      padding: 10px 0;
       box-shadow: 0 4px 15px rgba(255, 157, 0, 0.3);
+      overflow: hidden;
+      white-space: nowrap;
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 8px;
-      line-height: 1.4;
+      position: relative;
     }
-    @media (min-width: 600px) {
-      .promo-banner { font-size: 15px; padding: 14px 20px; }
+
+    .promo-banner-track {
+      display: inline-flex;
+      gap: 50px;
+      animation: marquee 18s linear infinite;
+      will-change: transform;
+    }
+
+    .promo-banner-wrapper:hover .promo-banner-track {
+      animation-play-state: paused;
+    }
+
+    .promo-item {
+      font-weight: 800;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    @keyframes marquee {
+      0% {
+        transform: translateX(0%);
+      }
+      100% {
+        transform: translateX(-50%);
+      }
     }
 
     .main-container { max-width: 1200px; margin: 16px auto; padding: 0 12px; }
@@ -319,9 +342,16 @@
   </header>
 
   <main class="main-container">
-    <!-- 🛒 Banner de la Yapa -->
-    <div class="promo-banner">
-      🛒 Las compras acumuladas por un valor de 200Bs. tienen su yapa, ¡no olvide reclamar! 🤩
+    <!-- 🛒 Banner Promocional Rotativo -->
+    <div class="promo-banner-wrapper">
+      <div class="promo-banner-track">
+        <div class="promo-item">
+          🛒 Las compras acumuladas por un valor de 200Bs. tienen su yapa, ¡no olvide reclamar! 🤩
+        </div>
+        <div class="promo-item">
+          🛒 Las compras acumuladas por un valor de 200Bs. tienen su yapa, ¡no olvide reclamar! 🤩
+        </div>
+      </div>
     </div>
 
     <!-- Catálogo de Productos -->
