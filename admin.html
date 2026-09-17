@@ -662,7 +662,7 @@
               </div>
 
               <div style="display: flex; gap: 8px; margin-top: 6px;">
-                <button type="button" class="btn" style="background: var(--accent-color); color: #000; font-size: 13px; padding: 10px;" onclick="document.getElementById('cameraInput').click()">
+                <button type="button" class="btn" style="background: var(--accent-color); color: #000; font-size: 13px; padding: 10px;" onclick="startLiveCamera()">
                   📸 Cámara Directa
                 </button>
                 <button type="button" class="btn" style="background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); font-size: 13px; padding: 10px;" onclick="document.getElementById('fileInput').click()">
@@ -670,7 +670,6 @@
                 </button>
               </div>
 
-              <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
               <input type="file" id="fileInput" multiple accept="image/*" style="display:none;">
 
               <div id="previewContainer" class="preview-container"></div>
@@ -732,6 +731,29 @@
 
   <!-- BOTÓN FLOTANTE (FAB) PARA IR DIRECTO A CREAR PRODUCTO -->
   <button class="fab-btn" onclick="openNewProductTab()" title="Agregar nuevo producto">➕</button>
+
+  <!-- MODAL CÁMARA CONTINUA EN VIVO -->
+  <div id="cameraStreamModal" class="modal" style="z-index: 600; background: #000;">
+    <div style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+      <video id="cameraVideo" autoplay playsinline style="width: 100%; max-height: 70vh; object-fit: cover; border-radius: 12px; background: #111;"></video>
+      <canvas id="cameraCanvas" style="display: none;"></canvas>
+
+      <div id="cameraPhotoCount" style="position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.7); color: #fff; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px;">
+        📸 Fotos tomadas: 0
+      </div>
+
+      <button type="button" onclick="stopLiveCamera()" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.2); color: #fff; border: 0; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer;">✕</button>
+
+      <div style="position: absolute; bottom: 30px; display: flex; align-items: center; gap: 20px;">
+        <button type="button" onclick="takeLiveSnap()" style="background: var(--accent-color); color: #000; border: 4px solid #fff; width: 70px; height: 70px; border-radius: 50%; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 157, 0, 0.5);">
+          📸
+        </button>
+        <button type="button" onclick="stopLiveCamera()" style="background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); padding: 12px 20px; border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer;">
+          ✅ Listo
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- MODAL NUEVA CATEGORÍA -->
   <div id="categoryModal" class="modal" onclick="if(event.target===this)closeCategoryModal()">
@@ -877,6 +899,8 @@
     let sortableInstance = null;
     let currentSelectedCategoryFilter = 'all';
     let stockEditingProductId = null;
+    let mediaStream = null;
+    let livePhotosTaken = 0;
 
     const CACHE_TIME_KEY = "aquita_admin_last_fetch";
     const ONE_HOUR = 60 * 60 * 1000;
@@ -1326,7 +1350,72 @@
       else throw new Error(data.error?.message || "Error al subir a Cloudinary");
     }
 
-    /* MANEJO DE FOTOS CON CÁMARA ACUMULATIVA */
+    /* SISTEMA DE CÁMARA CONTINUA EN VIVO */
+    window.startLiveCamera = async function() {
+      const modal = document.getElementById("cameraStreamModal");
+      const video = document.getElementById("cameraVideo");
+      livePhotosTaken = 0;
+      document.getElementById("cameraPhotoCount").textContent = "📸 Fotos tomadas: 0";
+
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { exact: "environment" } },
+          audio: false
+        });
+      } catch (err) {
+        try {
+          mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        } catch (e) {
+          showToast("❌ No se pudo acceder a la cámara: " + e.message);
+          return;
+        }
+      }
+
+      video.srcObject = mediaStream;
+      modal.classList.add("open");
+    };
+
+    window.takeLiveSnap = async function() {
+      const video = document.getElementById("cameraVideo");
+      const canvas = document.getElementById("cameraCanvas");
+      const maxDim = parseInt(document.getElementById("imgQuality").value || "800");
+
+      if (!video.videoWidth) return;
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        try {
+          showToast("⏳ Subiendo captura...");
+          const compressedBlob = await compressImage(new File([blob], "snap.jpg", { type: "image/jpeg" }), maxDim, 0.8);
+          const url = await uploadToCloudinary(compressedBlob);
+          
+          currentImages.push(url);
+          renderImagePreviews();
+          
+          livePhotosTaken++;
+          document.getElementById("cameraPhotoCount").textContent = `📸 Fotos tomadas: ${livePhotosTaken}`;
+          showToast("✅ Foto capturada");
+        } catch (err) {
+          showToast("❌ Error al subir foto: " + err.message);
+        }
+      }, "image/jpeg", 0.85);
+    };
+
+    window.stopLiveCamera = function() {
+      const modal = document.getElementById("cameraStreamModal");
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+        mediaStream = null;
+      }
+      modal.classList.remove("open");
+    };
+
+    /* MANEJO DE ARCHIVOS DESDE GALERÍA */
     async function handleFileSelect(event) {
       const files = Array.from(event.target.files);
       if (!files.length) return;
@@ -1359,13 +1448,11 @@
       } finally {
         saveBtn.disabled = false;
         saveBtn.textContent = "💾 Guardar e Insertar al Catálogo";
-        // Limpia el input para permitir volver a presionar la cámara y sumar otra foto
         event.target.value = "";
       }
     }
 
     document.getElementById("fileInput").addEventListener("change", handleFileSelect);
-    document.getElementById("cameraInput").addEventListener("change", handleFileSelect);
 
     function renderImagePreviews() {
       previewContainer.innerHTML = currentImages.map((img, idx) => `
@@ -1549,6 +1636,7 @@
     }
 
     window.addEventListener('popstate', () => {
+      if (document.getElementById("cameraStreamModal").classList.contains('open')) { stopLiveCamera(); return; }
       if (lightboxModal.classList.contains('open')) { lightboxModal.classList.remove('open'); return; }
       if (viewModal.classList.contains('open')) viewModal.classList.remove('open');
       if (document.getElementById("categoryModal").classList.contains('open')) closeCategoryModal();
