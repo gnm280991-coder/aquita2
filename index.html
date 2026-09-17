@@ -118,6 +118,26 @@
       cursor: pointer;
     }
 
+    /* 🎁 Banner Promocional */
+    .promo-banner {
+      background: linear-gradient(135deg, #ff9d00, #ff6c00);
+      color: #000;
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      font-weight: 800;
+      font-size: 14px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(255, 157, 0, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      line-height: 1.4;
+    }
+    @media (min-width: 600px) {
+      .promo-banner { font-size: 15px; padding: 14px 20px; }
+    }
+
     .main-container { max-width: 1200px; margin: 16px auto; padding: 0 12px; }
 
     .category-header {
@@ -203,7 +223,6 @@
       .netflix-row .prod-card { flex: 0 0 170px; padding: 10px; }
     }
 
-    /* Insignias de estado */
     .badge-container {
       position: absolute;
       top: 12px;
@@ -299,8 +318,16 @@
     </div>
   </header>
 
-  <main class="main-container" id="netflixContainer">
-    <div style="text-align: center; padding: 40px; color: var(--text-muted);">⏳ Cargando catálogo...</div>
+  <main class="main-container">
+    <!-- 🛒 Banner de la Yapa -->
+    <div class="promo-banner">
+      🛒 Las compras acumuladas por un valor de 200Bs. tienen su yapa, ¡no olvide reclamar! 🤩
+    </div>
+
+    <!-- Catálogo de Productos -->
+    <div id="netflixContainer" style="margin-top: 16px;">
+      <div style="text-align: center; padding: 40px; color: var(--text-muted);">⏳ Cargando catálogo...</div>
+    </div>
   </main>
 
   <a href="#" id="wsDirectLink" class="ws-float-btn" target="_blank" title="Consultar por WhatsApp">
@@ -379,7 +406,14 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { 
+      initializeFirestore, 
+      persistentLocalCache, 
+      persistentMultipleTabManager,
+      collection, 
+      getDocsFromCache, 
+      getDocsFromServer 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyAj_ZTJwiNL3cZIKU2L-RlaLyO_vO68oGc",
@@ -391,7 +425,13 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+
+    const db = initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager()
+      })
+    });
+
     const PHONE_NUMBER = "59171440907";
 
     let products = [];
@@ -447,24 +487,38 @@
 
     async function loadCatalog() {
       const container = document.getElementById("netflixContainer");
+      const productsRef = collection(db, "products");
 
-      const cachedData = localStorage.getItem("aqui_ta_products_cache");
-      const cachedTime = localStorage.getItem("aqui_ta_products_time");
-      const tenMinutes = 10 * 60 * 1000;
+      const CACHE_KEY_TIME = "aqui_ta_last_server_fetch";
+      const ONE_HOUR_MS = 60 * 60 * 1000;
 
-      if (cachedData) {
-        products = JSON.parse(cachedData);
-        populateCategoryDropdown();
-        renderNetflixCatalog(products);
-        checkUrlParamProduct();
-        
-        if (cachedTime && (Date.now() - Number(cachedTime) < tenMinutes)) {
-          return;
-        }
-      }
+      const lastFetch = localStorage.getItem(CACHE_KEY_TIME);
+      const now = Date.now();
+      const shouldFetchFromServer = !lastFetch || (now - Number(lastFetch) > ONE_HOUR_MS);
 
       try {
-        const querySnapshot = await getDocs(collection(db, "products"));
+        let querySnapshot;
+
+        if (shouldFetchFromServer) {
+          try {
+            querySnapshot = await getDocsFromServer(productsRef);
+            localStorage.setItem(CACHE_KEY_TIME, now.toString());
+          } catch (serverErr) {
+            querySnapshot = await getDocsFromCache(productsRef);
+          }
+        } else {
+          try {
+            querySnapshot = await getDocsFromCache(productsRef);
+            if (querySnapshot.empty) {
+              querySnapshot = await getDocsFromServer(productsRef);
+              localStorage.setItem(CACHE_KEY_TIME, now.toString());
+            }
+          } catch (cacheErr) {
+            querySnapshot = await getDocsFromServer(productsRef);
+            localStorage.setItem(CACHE_KEY_TIME, now.toString());
+          }
+        }
+
         const newProducts = [];
         querySnapshot.forEach((docSnap) => {
           const data = docSnap.data();
@@ -473,21 +527,15 @@
         newProducts.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
         products = newProducts;
-        localStorage.setItem("aqui_ta_products_cache", JSON.stringify(products));
-        localStorage.setItem("aqui_ta_products_time", Date.now().toString());
-
         populateCategoryDropdown();
         renderNetflixCatalog(products);
         checkUrlParamProduct();
       } catch (e) {
-        if (!cachedData) {
-          container.innerHTML = `
-            <div style="background: #1e293b; border: 1px solid #ef4444; border-radius: 12px; padding: 20px; text-align: center; color: #f8fafc;">
-              <div style="color: #ef4444; font-weight: 800; font-size: 15px; margin-bottom: 8px;">❌ Error de conexión</div>
-              <button onclick="reloadPage()" style="margin-top: 14px; background: #ff9d00; color: #0f172a; border: 0; padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer;">🔄 Reintentar</button>
-            </div>
-          `;
-        }
+        container.innerHTML = `
+          <div style="background: #1e293b; border: 1px solid #ef4444; border-radius: 12px; padding: 20px; text-align: center; color: #f8fafc;">
+            <div style="color: #ef4444; font-weight: 800; font-size: 15px; margin-bottom: 8px;">❌ Error de conexión o límite diario alcanzado</div>
+          </div>
+        `;
       }
     }
 
