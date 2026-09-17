@@ -732,26 +732,46 @@
   <!-- BOTÓN FLOTANTE (FAB) PARA IR DIRECTO A CREAR PRODUCTO -->
   <button class="fab-btn" onclick="openNewProductTab()" title="Agregar nuevo producto">➕</button>
 
-  <!-- MODAL CÁMARA CONTINUA EN VIVO -->
-  <div id="cameraStreamModal" class="modal" style="z-index: 600; background: #000;">
-    <div style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-      <video id="cameraVideo" autoplay playsinline style="width: 100%; max-height: 70vh; object-fit: cover; border-radius: 12px; background: #111;"></video>
+  <!-- MODAL CÁMARA CON CONFIRMACIÓN EN TAMAÑO REAL -->
+  <div id="cameraStreamModal" class="modal" style="z-index: 600; background: #000; padding: 0;">
+    <div style="position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000;">
+      
+      <!-- Video en vivo -->
+      <video id="cameraVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+      
+      <!-- Imagen de captura estática congelada para revisión -->
+      <img id="cameraReviewImg" style="display: none; width: 100%; height: 100%; object-fit: cover;">
+      
       <canvas id="cameraCanvas" style="display: none;"></canvas>
 
-      <div id="cameraPhotoCount" style="position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.7); color: #fff; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px;">
+      <!-- Contador de fotos arriba -->
+      <div id="cameraPhotoCount" style="position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.75); color: #fff; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 13px; z-index: 610; backdrop-filter: blur(4px);">
         📸 Fotos tomadas: 0
       </div>
 
-      <button type="button" onclick="stopLiveCamera()" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.2); color: #fff; border: 0; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer;">✕</button>
+      <!-- Botón X para cerrar todo -->
+      <button type="button" onclick="stopLiveCamera()" style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.75); color: #fff; border: 0; width: 42px; height: 42px; border-radius: 50%; font-size: 20px; cursor: pointer; z-index: 610; backdrop-filter: blur(4px);">✕</button>
 
-      <div style="position: absolute; bottom: 30px; display: flex; align-items: center; gap: 20px;">
-        <button type="button" onclick="takeLiveSnap()" style="background: var(--accent-color); color: #000; border: 4px solid #fff; width: 70px; height: 70px; border-radius: 50%; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 157, 0, 0.5);">
+      <!-- CONTROLES MODO 1: CAPTURAR (Llamador activo) -->
+      <div id="cameraCaptureControls" style="position: absolute; bottom: 30px; display: flex; align-items: center; gap: 20px; z-index: 610;">
+        <button type="button" onclick="takeLiveSnap()" style="background: var(--accent-color); color: #000; border: 4px solid #fff; width: 72px; height: 72px; border-radius: 50%; font-size: 26px; cursor: pointer; box-shadow: 0 4px 20px rgba(255, 157, 0, 0.6);">
           📸
         </button>
-        <button type="button" onclick="stopLiveCamera()" style="background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); padding: 12px 20px; border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer;">
-          ✅ Listo
+        <button type="button" onclick="stopLiveCamera()" style="background: rgba(0,0,0,0.75); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 12px 22px; border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer; backdrop-filter: blur(4px);">
+          ✅ Finalizar
         </button>
       </div>
+
+      <!-- CONTROLES MODO 2: REVISAR / CONFIRMAR FOTO -->
+      <div id="cameraReviewControls" style="display: none; position: absolute; bottom: 30px; gap: 16px; z-index: 610; width: 90%; max-width: 360px;">
+        <button type="button" onclick="discardCurrentSnap()" style="flex: 1; background: var(--danger-color); color: #fff; border: 0; padding: 14px; border-radius: 14px; font-weight: 800; font-size: 14px; cursor: pointer; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);">
+          ❌ Repetir
+        </button>
+        <button type="button" id="btnConfirmSnap" onclick="confirmAndUploadSnap()" style="flex: 1.2; background: var(--success-color); color: #fff; border: 0; padding: 14px; border-radius: 14px; font-weight: 800; font-size: 14px; cursor: pointer; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);">
+          ✅ Aceptar
+        </button>
+      </div>
+
     </div>
   </div>
 
@@ -901,6 +921,7 @@
     let stockEditingProductId = null;
     let mediaStream = null;
     let livePhotosTaken = 0;
+    let pendingBlob = null;
 
     const CACHE_TIME_KEY = "aquita_admin_last_fetch";
     const ONE_HOUR = 60 * 60 * 1000;
@@ -1350,12 +1371,21 @@
       else throw new Error(data.error?.message || "Error al subir a Cloudinary");
     }
 
-    /* SISTEMA DE CÁMARA CONTINUA EN VIVO */
+    /* SISTEMA DE CÁMARA CONTINUA EN VIVO CON CONFIRMACIÓN EN PANTALLA COMPLETA */
     window.startLiveCamera = async function() {
       const modal = document.getElementById("cameraStreamModal");
       const video = document.getElementById("cameraVideo");
+      const reviewImg = document.getElementById("cameraReviewImg");
+      
       livePhotosTaken = 0;
+      pendingBlob = null;
       document.getElementById("cameraPhotoCount").textContent = "📸 Fotos tomadas: 0";
+
+      // Resetear elementos a estado inicial de captura
+      video.style.display = "block";
+      reviewImg.style.display = "none";
+      document.getElementById("cameraCaptureControls").style.display = "flex";
+      document.getElementById("cameraReviewControls").style.display = "none";
 
       try {
         mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -1375,10 +1405,11 @@
       modal.classList.add("open");
     };
 
-    window.takeLiveSnap = async function() {
+    // Tomar Disparo y Congelar para Revisión
+    window.takeLiveSnap = function() {
       const video = document.getElementById("cameraVideo");
       const canvas = document.getElementById("cameraCanvas");
-      const maxDim = parseInt(document.getElementById("imgQuality").value || "800");
+      const reviewImg = document.getElementById("cameraReviewImg");
 
       if (!video.videoWidth) return;
 
@@ -1387,23 +1418,66 @@
       const ctx = canvas.getContext("2d");
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      canvas.toBlob(async (blob) => {
-        if (!blob) return;
-        try {
-          showToast("⏳ Subiendo captura...");
-          const compressedBlob = await compressImage(new File([blob], "snap.jpg", { type: "image/jpeg" }), maxDim, 0.8);
-          const url = await uploadToCloudinary(compressedBlob);
-          
-          currentImages.push(url);
-          renderImagePreviews();
-          
-          livePhotosTaken++;
-          document.getElementById("cameraPhotoCount").textContent = `📸 Fotos tomadas: ${livePhotosTaken}`;
-          showToast("✅ Foto capturada");
-        } catch (err) {
-          showToast("❌ Error al subir foto: " + err.message);
-        }
+      // Congelar fotograma en imagen estática de tamaño completo
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
+      reviewImg.src = dataUrl;
+
+      // Cambiar interfaz: ocultar video en vivo, mostrar imagen congelada
+      video.style.display = "none";
+      reviewImg.style.display = "block";
+
+      document.getElementById("cameraCaptureControls").style.display = "none";
+      document.getElementById("cameraReviewControls").style.display = "flex";
+
+      // Guardar blob temporalmente hasta que el usuario decida Aceptar o Descartar
+      canvas.toBlob((blob) => {
+        pendingBlob = blob;
       }, "image/jpeg", 0.85);
+    };
+
+    // Opcion 1: Descartar / Repetir Foto
+    window.discardCurrentSnap = function() {
+      const video = document.getElementById("cameraVideo");
+      const reviewImg = document.getElementById("cameraReviewImg");
+
+      pendingBlob = null;
+      reviewImg.style.display = "none";
+      video.style.display = "block";
+
+      document.getElementById("cameraReviewControls").style.display = "none";
+      document.getElementById("cameraCaptureControls").style.display = "flex";
+    };
+
+    // Opcion 2: Aceptar y Subir Foto
+    window.confirmAndUploadSnap = async function() {
+      if (!pendingBlob) return;
+
+      const maxDim = parseInt(document.getElementById("imgQuality").value || "800");
+      const btnConfirm = document.getElementById("btnConfirmSnap");
+
+      btnConfirm.disabled = true;
+      btnConfirm.textContent = "⏳ Subiendo...";
+
+      try {
+        const compressedBlob = await compressImage(new File([pendingBlob], "snap.jpg", { type: "image/jpeg" }), maxDim, 0.8);
+        const url = await uploadToCloudinary(compressedBlob);
+
+        currentImages.push(url);
+        renderImagePreviews();
+
+        livePhotosTaken++;
+        document.getElementById("cameraPhotoCount").textContent = `📸 Fotos tomadas: ${livePhotosTaken}`;
+        showToast("✅ Foto agregada");
+
+        // Reanudar cámara en vivo para la siguiente captura
+        discardCurrentSnap();
+
+      } catch (err) {
+        showToast("❌ Error al subir: " + err.message);
+      } finally {
+        btnConfirm.disabled = false;
+        btnConfirm.textContent = "✅ Aceptar";
+      }
     };
 
     window.stopLiveCamera = function() {
