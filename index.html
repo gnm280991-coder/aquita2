@@ -203,7 +203,20 @@
       .netflix-row .prod-card { flex: 0 0 170px; padding: 10px; }
     }
 
-    .badge-out { position: absolute; top: 12px; right: 12px; background: var(--danger-color); color: #fff; font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; z-index: 10; }
+    /* Insignias de estado */
+    .badge-container {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 10;
+      align-items: flex-end;
+    }
+    .badge-out { background: var(--danger-color); color: #fff; font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; }
+    .badge-new { background: var(--new-color); color: #fff; font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; }
+
     .prod-img-wrap { width: 100%; height: 120px; background: var(--bg-main); border-radius: 8px; overflow: hidden; cursor: pointer; }
     @media (min-width: 600px) { .prod-img-wrap { height: 140px; } }
     
@@ -247,6 +260,8 @@
     .btn-ws { width: 100%; background: var(--whatsapp-color); color: #fff; border: 0; border-radius: 12px; padding: 14px; font-weight: 800; font-size: 15px; margin-top: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
     .btn-add-modal { width: 100%; background: var(--accent-color); color: #0f172a; border: 0; border-radius: 12px; padding: 12px; font-weight: 800; font-size: 15px; margin-top: 10px; cursor: pointer; }
     .btn-add-modal:disabled { opacity: 0.5; cursor: not-allowed; background: var(--bg-main); color: var(--text-muted); }
+
+    .btn-share-modal { width: 100%; background: var(--bg-main); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 12px; padding: 10px; font-weight: 700; font-size: 14px; margin-top: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
     .lightbox-modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.92); display: none; align-items: center; justify-content: center; z-index: 500; padding: 16px; }
     .lightbox-modal.open { display: flex; }
@@ -327,7 +342,8 @@
       <div id="modalDesc" class="detail-desc"></div>
 
       <button id="modalAddBtn" class="btn-add-modal" onclick="addCurrentProductToCart()">🛒 Agregar al Carrito</button>
-      <button class="btn-ws" onclick="orderSingleWhatsapp()">💬 Pedir directamente con foto</button>
+      <button class="btn-ws" onclick="orderSingleWhatsapp()">💬 Pedir directamente por WhatsApp</button>
+      <button class="btn-share-modal" onclick="shareCurrentProduct()">🔗 Compartir producto</button>
     </div>
   </div>
 
@@ -440,6 +456,7 @@
         products = JSON.parse(cachedData);
         populateCategoryDropdown();
         renderNetflixCatalog(products);
+        checkUrlParamProduct();
         
         if (cachedTime && (Date.now() - Number(cachedTime) < tenMinutes)) {
           return;
@@ -461,6 +478,7 @@
 
         populateCategoryDropdown();
         renderNetflixCatalog(products);
+        checkUrlParamProduct();
       } catch (e) {
         if (!cachedData) {
           container.innerHTML = `
@@ -470,6 +488,14 @@
             </div>
           `;
         }
+      }
+    }
+
+    function checkUrlParamProduct() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const prodId = urlParams.get('p');
+      if (prodId && products.length) {
+        openModal(prodId);
       }
     }
 
@@ -586,15 +612,25 @@
       `;
     }
 
+    function isProductNew(createdAt) {
+      if (!createdAt) return false;
+      const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
+      return (Date.now() - Number(createdAt)) < sevenDaysInMs;
+    }
+
     function createCardHTML(p) {
       const images = getImagesArray(p);
       const mainImg = images[0] || 'https://via.placeholder.com/200?text=Aquí+tái';
       const stock = Number(p.stock || 0);
       const isOutOfStock = stock <= 0;
+      const isNew = isProductNew(p.createdAt);
 
       return `
         <div class="prod-card">
-          ${isOutOfStock ? '<span class="badge-out">Agotado</span>' : ''}
+          <div class="badge-container">
+            ${isOutOfStock ? '<span class="badge-out">Agotado</span>' : ''}
+            ${isNew ? '<span class="badge-new">¡Nuevo!</span>' : ''}
+          </div>
           <div class="prod-img-wrap" onclick="openModal('${p.id}')">
             <img class="prod-img" src="${escapeHTML(mainImg)}" alt="${escapeHTML(p.name)}" loading="lazy" decoding="async">
           </div>
@@ -764,6 +800,27 @@
       msg += `¿Tienen disponibilidad?`;
 
       window.open(`https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    window.shareCurrentProduct = function() {
+      if (!currentSelectedProduct) return;
+      const shareUrl = `${window.location.origin}${window.location.pathname}?p=${currentSelectedProduct.id}`;
+      const shareTitle = currentSelectedProduct.name;
+      const shareText = `¡Mira este producto en Aquí tái!: ${shareTitle} - Bs ${Number(currentSelectedProduct.price || 0).toFixed(2)}`;
+
+      if (navigator.share) {
+        navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl
+        }).catch(() => {});
+      } else {
+        navigator.clipboard.writeText(shareUrl).then(() => {
+          alert("¡Enlace del producto copiado al portapapeles!");
+        }).catch(() => {
+          alert("No se pudo copiar el enlace automáticamente.");
+        });
+      }
     }
 
     function getImagesArray(product) {
