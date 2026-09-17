@@ -383,7 +383,7 @@
       border-color: var(--accent-color);
     }
 
-    .table-controls { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+    .table-controls { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; }
 
     .table-wrap {
       background: var(--bg-card);
@@ -635,7 +635,6 @@
             <div class="form-group">
               <label>Stock (Unidades) *</label>
               <input type="number" id="stock" min="0" required placeholder="1" inputmode="numeric">
-              <!-- Botones directos con estilo directo para evitar depender de clases huérfanas -->
               <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
                 <button type="button" class="btn-cancel" style="padding: 6px 12px; font-size: 12px; font-weight: 600;" onclick="addStockShortcut(5)">+5</button>
                 <button type="button" class="btn-cancel" style="padding: 6px 12px; font-size: 12px; font-weight: 600;" onclick="addStockShortcut(10)">+10</button>
@@ -696,6 +695,7 @@
     <div id="tab-list" class="tab-content">
       <div class="table-controls">
         <input type="text" id="tableSearch" placeholder="🔎 Buscar en inventario..." style="flex:1; min-width:180px;" oninput="filterTable()">
+        <button type="button" class="btn-cancel" onclick="loadInventory(true)" style="padding: 10px 14px; font-weight: bold; background: var(--bg-card);" title="Forzar recarga desde servidor">🔄 Sincronizar</button>
       </div>
 
       <!-- FILTROS RÁPIDOS EN PÍLDORAS (HORIZONTAL) -->
@@ -804,13 +804,24 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { 
+      initializeFirestore, 
+      persistentLocalCache, 
+      persistentMultipleTabManager, 
+      collection, 
+      getDocsFromCache, 
+      getDocsFromServer, 
+      addDoc, 
+      doc, 
+      updateDoc, 
+      deleteDoc 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     // Configuración activa de Cloudinary
     const CLOUDINARY_CLOUD_NAME = "rlrxdhzq";
     const CLOUDINARY_UPLOAD_PRESET = "presetnuevo";
 
-    // Credenciales oficiales de Firebase (Actualizadas para app WebAquita)
+    // Credenciales oficiales de Firebase (App WebAquita)
     const firebaseConfig = {
         apiKey: "AIzaSyAj_ZTJwiNL3cZIKU2L-RlaLyO_vO68oGc",
         authDomain: "aquita-tienda.firebaseapp.com",
@@ -822,7 +833,13 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = getFirestore(app);
+
+    // Inicialización optimizada de Firestore con Caché Persistente Local
+    const db = initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager()
+      })
+    });
 
     // Inicializar Quill Editor
     const quill = new Quill('#editor', {
@@ -836,7 +853,7 @@
       }
     });
 
-    // Opción 3 conservada intacta (Workaround táctil para Quill)
+    // Workaround táctil para Quill
     setTimeout(() => {
       const cleanBtn = document.querySelector('.ql-clean');
       if (cleanBtn) {
@@ -860,6 +877,9 @@
     let sortableInstance = null;
     let currentSelectedCategoryFilter = 'all';
     let stockEditingProductId = null;
+
+    const CACHE_TIME_KEY = "aquita_admin_last_fetch";
+    const ONE_HOUR = 60 * 60 * 1000;
 
     const inventoryTable = document.getElementById("inventoryTable");
     const productForm = document.getElementById("productForm");
@@ -1001,12 +1021,34 @@
       closeCategoryModal();
     };
 
-    /* CARGAR INVENTARIO COMPATIBLE Y ORDENADO */
-    async function loadInventory() {
+    /* CARGAR INVENTARIO OPTIMIZADO CON CACHÉ LOCAL */
+    window.loadInventory = async function(forceRefresh = false) {
       try {
-        const querySnapshot = await getDocs(collection(db, "products"));
+        const productsRef = collection(db, "products");
+        const lastFetch = localStorage.getItem(CACHE_TIME_KEY);
+        const now = Date.now();
+        const isExpired = !lastFetch || (now - Number(lastFetch) > ONE_HOUR);
+
+        let querySnapshot;
+
+        if (!forceRefresh && !isExpired) {
+          try {
+            querySnapshot = await getDocsFromCache(productsRef);
+            if (querySnapshot.empty) {
+              querySnapshot = await getDocsFromServer(productsRef);
+              localStorage.setItem(CACHE_TIME_KEY, now.toString());
+            }
+          } catch (e) {
+            querySnapshot = await getDocsFromServer(productsRef);
+            localStorage.setItem(CACHE_TIME_KEY, now.toString());
+          }
+        } else {
+          querySnapshot = await getDocsFromServer(productsRef);
+          localStorage.setItem(CACHE_TIME_KEY, now.toString());
+          if (forceRefresh) showToast("🔄 Sincronizado con servidor");
+        }
+
         products = [];
-        
         querySnapshot.forEach((docSnap) => {
           const data = docSnap.data();
           products.push({ 
@@ -1046,7 +1088,7 @@
         console.error(e);
         inventoryTable.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--danger-color);">❌ Error al cargar datos: ${e.message}</td></tr>`;
       }
-    }
+    };
 
     function updateMetrics() {
       const activeProds = products.filter(p => p.active);
@@ -1359,6 +1401,7 @@
       stockInput.value = Math.max(0, Number(stockInput.value || 0) + amount);
     };
 
+    /* GUARDAR / EDITAR PRODUCTO SIN CONSUMIR LECTURAS EXTRA */
     productForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const saveBtn = document.getElementById("saveBtn");
@@ -1371,7 +1414,6 @@
       const existingProduct = id ? products.find(x => x.id === id) : null;
       const createdAtTimestamp = existingProduct?.createdAt || Date.now();
 
-      // Se mantiene la propiedad 'image' por retrocompatibilidad con las opciones seleccionadas
       const payload = {
         name: nameInput.value.trim(),
         category: categorySelect.value.trim(),
@@ -1386,15 +1428,25 @@
 
       try {
         if (id) {
+          // 1 Escritura
           await updateDoc(doc(db, "products", id), payload);
+          const idx = products.findIndex(x => x.id === id);
+          if (idx !== -1) products[idx] = { id, ...payload };
         } else {
-          await addDoc(collection(db, "products"), payload);
+          // 1 Escritura
+          const docRef = await addDoc(collection(db, "products"), payload);
+          products.unshift({ id: docRef.id, ...payload });
         }
 
         showToast("✅ ¡Producto guardado!");
         resetForm();
-        await loadInventory(); 
+        
+        // Actualizar vista e inventario en memoria sin llamar a Firestore
+        document.getElementById("countBadge").textContent = products.length;
+        updateMetrics();
+        filterTable();
         switchTab('tab-list'); 
+
       } catch (error) {
         showToast("❌ Error al guardar: " + error.message);
       } finally {
@@ -1474,11 +1526,18 @@
       showToast("⚠️ ¿Eliminar permanentemente?", () => deleteProduct(id), "Sí, eliminar");
     };
 
+    /* ELIMINAR SIN CONSUMIR LECTURAS EXTRA */
     async function deleteProduct(id) {
       try {
         await deleteDoc(doc(db, "products", id));
         showToast("🗑️ Eliminado");
-        loadInventory();
+        
+        // Remover de la lista local en memoria sin recargar la colección completa
+        products = products.filter(p => p.id !== id);
+        document.getElementById("countBadge").textContent = products.length;
+        updateMetrics();
+        filterTable();
+
       } catch (error) {
         showToast("❌ Error al eliminar");
       }
