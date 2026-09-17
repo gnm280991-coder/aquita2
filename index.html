@@ -71,19 +71,6 @@
     .brand span { background: var(--accent-color); color: #000; font-size: 10px; padding: 2px 6px; border-radius: 6px; font-weight: 700; }
     .sub { font-size: 11px; color: var(--text-muted); }
 
-    .visits-badge {
-      background: var(--bg-main);
-      border: 1px solid var(--border-color);
-      color: var(--text-muted);
-      font-size: 11px;
-      font-weight: 600;
-      padding: 6px 10px;
-      border-radius: 20px;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
     .theme-toggle-btn {
       background: var(--bg-main);
       border: 1px solid var(--border-color);
@@ -281,10 +268,6 @@
         <div class="brand">Aquí tái <span>TIENDA OFICIAL</span></div>
         <div class="sub">Cochabamba, Bolivia</div>
       </div>
-      
-      <div class="visits-badge" title="Visitas totales">
-        👁️ <span id="visitsCount">...</span>
-      </div>
 
       <button class="theme-toggle-btn" id="themeBtn" onclick="toggleTheme()" title="Cambiar tema">🌙</button>
     </div>
@@ -380,7 +363,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, doc, updateDoc, increment, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyAj_ZTJwiNL3cZIKU2L-RlaLyO_vO68oGc",
@@ -414,13 +397,6 @@
       document.getElementById("searchInput").value = "";
       renderNetflixCatalog(products);
     };
-
-    function registrarVisitaAsync() {
-      const visitRef = doc(db, "stats", "visitas");
-      updateDoc(visitRef, { count: increment(1) })
-        .catch(() => setDoc(visitRef, { count: 1 }, { merge: true }))
-        .catch(() => {});
-    }
 
     function loadSavedCart() {
       try {
@@ -820,7 +796,6 @@
       initTheme();
       loadSavedCart();
       loadCatalog();
-      registrarVisitaAsync();
     });
   </script>
 </body>
