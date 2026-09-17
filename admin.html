@@ -732,7 +732,7 @@
   <!-- BOTÓN FLOTANTE (FAB) PARA IR DIRECTO A CREAR PRODUCTO -->
   <button class="fab-btn" onclick="openNewProductTab()" title="Agregar nuevo producto">➕</button>
 
-  <!-- MODAL CÁMARA CON CONFIRMACIÓN EN TAMAÑO REAL -->
+  <!-- MODAL CÁMARA CON CONFIRMACIÓN EN TAMAÑO REAL Y SUBIDA AL FINAL -->
   <div id="cameraStreamModal" class="modal" style="z-index: 600; background: #000; padding: 0;">
     <div style="position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000;">
       
@@ -746,7 +746,7 @@
 
       <!-- Contador de fotos arriba -->
       <div id="cameraPhotoCount" style="position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.75); color: #fff; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 13px; z-index: 610; backdrop-filter: blur(4px);">
-        📸 Fotos tomadas: 0
+        📸 Fotos en lote: 0
       </div>
 
       <!-- Botón X para cerrar todo -->
@@ -762,7 +762,7 @@
         </button>
       </div>
 
-      <!-- CONTROLES MODO 2: REVISAR / CONFIRMAR FOTO -->
+      <!-- CONTROLES MODO 2: REVISAR / CONFIRMAR FOTO EN LOTE LOCAL -->
       <div id="cameraReviewControls" style="display: none; position: absolute; bottom: 30px; gap: 16px; z-index: 610; width: 90%; max-width: 360px;">
         <button type="button" onclick="discardCurrentSnap()" style="flex: 1; background: var(--danger-color); color: #fff; border: 0; padding: 14px; border-radius: 14px; font-weight: 800; font-size: 14px; cursor: pointer; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);">
           ❌ Repetir
@@ -920,8 +920,8 @@
     let currentSelectedCategoryFilter = 'all';
     let stockEditingProductId = null;
     let mediaStream = null;
-    let livePhotosTaken = 0;
     let pendingBlob = null;
+    let pendingBlobsBatch = [];
 
     const CACHE_TIME_KEY = "aquita_admin_last_fetch";
     const ONE_HOUR = 60 * 60 * 1000;
@@ -1371,17 +1371,16 @@
       else throw new Error(data.error?.message || "Error al subir a Cloudinary");
     }
 
-    /* SISTEMA DE CÁMARA CONTINUA EN VIVO CON CONFIRMACIÓN EN PANTALLA COMPLETA */
+    /* SISTEMA DE CÁMARA CONTINUA EN VIVO CON SUBIDA EN LOTE AL FINAL */
     window.startLiveCamera = async function() {
       const modal = document.getElementById("cameraStreamModal");
       const video = document.getElementById("cameraVideo");
       const reviewImg = document.getElementById("cameraReviewImg");
       
-      livePhotosTaken = 0;
+      pendingBlobsBatch = [];
       pendingBlob = null;
-      document.getElementById("cameraPhotoCount").textContent = "📸 Fotos tomadas: 0";
+      document.getElementById("cameraPhotoCount").textContent = "📸 Fotos en lote: 0";
 
-      // Resetear elementos a estado inicial de captura
       video.style.display = "block";
       reviewImg.style.display = "none";
       document.getElementById("cameraCaptureControls").style.display = "flex";
@@ -1405,7 +1404,6 @@
       modal.classList.add("open");
     };
 
-    // Tomar Disparo y Congelar para Revisión
     window.takeLiveSnap = function() {
       const video = document.getElementById("cameraVideo");
       const canvas = document.getElementById("cameraCanvas");
@@ -1418,24 +1416,20 @@
       const ctx = canvas.getContext("2d");
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // Congelar fotograma en imagen estática de tamaño completo
       const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
       reviewImg.src = dataUrl;
 
-      // Cambiar interfaz: ocultar video en vivo, mostrar imagen congelada
       video.style.display = "none";
       reviewImg.style.display = "block";
 
       document.getElementById("cameraCaptureControls").style.display = "none";
       document.getElementById("cameraReviewControls").style.display = "flex";
 
-      // Guardar blob temporalmente hasta que el usuario decida Aceptar o Descartar
       canvas.toBlob((blob) => {
         pendingBlob = blob;
       }, "image/jpeg", 0.85);
     };
 
-    // Opcion 1: Descartar / Repetir Foto
     window.discardCurrentSnap = function() {
       const video = document.getElementById("cameraVideo");
       const reviewImg = document.getElementById("cameraReviewImg");
@@ -1448,45 +1442,58 @@
       document.getElementById("cameraCaptureControls").style.display = "flex";
     };
 
-    // Opcion 2: Aceptar y Subir Foto
-    window.confirmAndUploadSnap = async function() {
+    window.confirmAndUploadSnap = function() {
       if (!pendingBlob) return;
 
-      const maxDim = parseInt(document.getElementById("imgQuality").value || "800");
-      const btnConfirm = document.getElementById("btnConfirmSnap");
+      pendingBlobsBatch.push(pendingBlob);
+      document.getElementById("cameraPhotoCount").textContent = `📸 Fotos en lote: ${pendingBlobsBatch.length}`;
+      showToast(`✅ Foto ${pendingBlobsBatch.length} guardada en memoria`);
 
-      btnConfirm.disabled = true;
-      btnConfirm.textContent = "⏳ Subiendo...";
-
-      try {
-        const compressedBlob = await compressImage(new File([pendingBlob], "snap.jpg", { type: "image/jpeg" }), maxDim, 0.8);
-        const url = await uploadToCloudinary(compressedBlob);
-
-        currentImages.push(url);
-        renderImagePreviews();
-
-        livePhotosTaken++;
-        document.getElementById("cameraPhotoCount").textContent = `📸 Fotos tomadas: ${livePhotosTaken}`;
-        showToast("✅ Foto agregada");
-
-        // Reanudar cámara en vivo para la siguiente captura
-        discardCurrentSnap();
-
-      } catch (err) {
-        showToast("❌ Error al subir: " + err.message);
-      } finally {
-        btnConfirm.disabled = false;
-        btnConfirm.textContent = "✅ Aceptar";
-      }
+      discardCurrentSnap();
     };
 
-    window.stopLiveCamera = function() {
+    window.stopLiveCamera = async function() {
       const modal = document.getElementById("cameraStreamModal");
+      const saveBtn = document.getElementById("saveBtn");
+
       if (mediaStream) {
         mediaStream.getTracks().forEach(track => track.stop());
         mediaStream = null;
       }
       modal.classList.remove("open");
+
+      if (pendingBlobsBatch.length > 0) {
+        const maxDim = parseInt(document.getElementById("imgQuality").value || "800");
+        saveBtn.disabled = true;
+        saveBtn.textContent = "⏳ Subiendo lote de fotos...";
+        showToast(`⏳ Subiendo ${pendingBlobsBatch.length} foto(s) a Cloudinary...`);
+
+        const uploadPromises = pendingBlobsBatch.map(async (blobItem) => {
+          try {
+            const compressedBlob = await compressImage(new File([blobItem], "snap.jpg", { type: "image/jpeg" }), maxDim, 0.8);
+            return await uploadToCloudinary(compressedBlob);
+          } catch (err) {
+            return null;
+          }
+        });
+
+        try {
+          const results = await Promise.all(uploadPromises);
+          const successfulUrls = results.filter(url => url !== null);
+          
+          if (successfulUrls.length > 0) {
+            currentImages.push(...successfulUrls);
+            renderImagePreviews();
+            showToast(`🎉 ¡${successfulUrls.length} foto(s) agregada(s) al producto!`);
+          }
+        } catch (err) {
+          showToast("❌ Error al procesar subida del lote");
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = "💾 Guardar e Insertar al Catálogo";
+          pendingBlobsBatch = [];
+        }
+      }
     };
 
     /* MANEJO DE ARCHIVOS DESDE GALERÍA */
