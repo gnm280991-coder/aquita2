@@ -655,22 +655,27 @@
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <label>Imágenes (Arrastra para reordenar)</label>
                 <select id="imgQuality" style="font-size: 10px; padding: 2px 6px;">
-                  <option value="600">⚡ Ligera (600px)</option>
-                  <option value="800" selected>⚖️ Balanceada (800px)</option>
-                  <option value="1200">📸 HD (1200px)</option>
+                  <option value="800">⚡ Balanceada (800px)</option>
+                  <option value="1200" selected>📸 HD Alta Calidad (1200px)</option>
+                  <option value="1920">🌟 Máxima Res. (1920px)</option>
                 </select>
               </div>
 
+              <!-- BOTONES ESTILO SELECTOR UNIFICADO NATIVO -->
               <div style="display: flex; gap: 8px; margin-top: 6px;">
-                <button type="button" class="btn" style="background: var(--accent-color); color: #000; font-size: 13px; padding: 10px;" onclick="startLiveCamera()">
-                  📸 Cámara Directa
+                <button type="button" class="btn" style="background: var(--accent-color); color: #000; font-size: 13px; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="document.getElementById('cameraInput').click()">
+                  📸 Tomar Foto Nativa
                 </button>
-                <button type="button" class="btn" style="background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); font-size: 13px; padding: 10px;" onclick="document.getElementById('fileInput').click()">
-                  🖼️ Galería
+                <button type="button" class="btn" style="background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); font-size: 13px; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="document.getElementById('galleryInput').click()">
+                  🖼️ Seleccionar Galería
                 </button>
               </div>
 
-              <input type="file" id="fileInput" multiple accept="image/*" style="display:none;">
+              <!-- INPUT OCULTO CÁMARA NATIVA CELULAR (Abre la cámara oficial del teléfono) -->
+              <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
+
+              <!-- INPUT OCULTO GALERÍA MÚLTIPLE (Abre la galería con selector de múltiples fotos) -->
+              <input type="file" id="galleryInput" multiple accept="image/*" style="display:none;">
 
               <div id="previewContainer" class="preview-container"></div>
             </div>
@@ -731,49 +736,6 @@
 
   <!-- BOTÓN FLOTANTE (FAB) PARA IR DIRECTO A CREAR PRODUCTO -->
   <button class="fab-btn" onclick="openNewProductTab()" title="Agregar nuevo producto">➕</button>
-
-  <!-- MODAL CÁMARA CON CONFIRMACIÓN EN TAMAÑO REAL Y SUBIDA AL FINAL -->
-  <div id="cameraStreamModal" class="modal" style="z-index: 600; background: #000; padding: 0;">
-    <div style="position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000;">
-      
-      <!-- Video en vivo -->
-      <video id="cameraVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
-      
-      <!-- Imagen de captura estática congelada para revisión -->
-      <img id="cameraReviewImg" style="display: none; width: 100%; height: 100%; object-fit: cover;">
-      
-      <canvas id="cameraCanvas" style="display: none;"></canvas>
-
-      <!-- Contador de fotos arriba -->
-      <div id="cameraPhotoCount" style="position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.75); color: #fff; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 13px; z-index: 610; backdrop-filter: blur(4px);">
-        📸 Fotos en lote: 0
-      </div>
-
-      <!-- Botón X para cerrar todo -->
-      <button type="button" onclick="stopLiveCamera()" style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.75); color: #fff; border: 0; width: 42px; height: 42px; border-radius: 50%; font-size: 20px; cursor: pointer; z-index: 610; backdrop-filter: blur(4px);">✕</button>
-
-      <!-- CONTROLES MODO 1: CAPTURAR (Llamador activo) -->
-      <div id="cameraCaptureControls" style="position: absolute; bottom: 30px; display: flex; align-items: center; gap: 20px; z-index: 610;">
-        <button type="button" onclick="takeLiveSnap()" style="background: var(--accent-color); color: #000; border: 4px solid #fff; width: 72px; height: 72px; border-radius: 50%; font-size: 26px; cursor: pointer; box-shadow: 0 4px 20px rgba(255, 157, 0, 0.6);">
-          📸
-        </button>
-        <button type="button" onclick="stopLiveCamera()" style="background: rgba(0,0,0,0.75); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 12px 22px; border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer; backdrop-filter: blur(4px);">
-          ✅ Finalizar
-        </button>
-      </div>
-
-      <!-- CONTROLES MODO 2: REVISAR / CONFIRMAR FOTO EN LOTE LOCAL -->
-      <div id="cameraReviewControls" style="display: none; position: absolute; bottom: 30px; gap: 16px; z-index: 610; width: 90%; max-width: 360px;">
-        <button type="button" onclick="discardCurrentSnap()" style="flex: 1; background: var(--danger-color); color: #fff; border: 0; padding: 14px; border-radius: 14px; font-weight: 800; font-size: 14px; cursor: pointer; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);">
-          ❌ Repetir
-        </button>
-        <button type="button" id="btnConfirmSnap" onclick="confirmAndUploadSnap()" style="flex: 1.2; background: var(--success-color); color: #fff; border: 0; padding: 14px; border-radius: 14px; font-weight: 800; font-size: 14px; cursor: pointer; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);">
-          ✅ Aceptar
-        </button>
-      </div>
-
-    </div>
-  </div>
 
   <!-- MODAL NUEVA CATEGORÍA -->
   <div id="categoryModal" class="modal" onclick="if(event.target===this)closeCategoryModal()">
@@ -919,9 +881,6 @@
     let sortableInstance = null;
     let currentSelectedCategoryFilter = 'all';
     let stockEditingProductId = null;
-    let mediaStream = null;
-    let pendingBlob = null;
-    let pendingBlobsBatch = [];
 
     const CACHE_TIME_KEY = "aquita_admin_last_fetch";
     const ONE_HOUR = 60 * 60 * 1000;
@@ -1331,7 +1290,7 @@
       return list;
     }
 
-    function compressImage(file, maxDimension = 800, quality = 0.8) {
+    function compressImage(file, maxDimension = 1200, quality = 0.88) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -1348,6 +1307,8 @@
             const canvas = document.createElement("canvas");
             canvas.width = width; canvas.height = height;
             const ctx = canvas.getContext("2d");
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = "high";
             ctx.drawImage(img, 0, 0, width, height);
             canvas.toBlob((blob) => { blob ? resolve(blob) : reject(new Error("Blob error")); }, "image/jpeg", quality);
           };
@@ -1371,144 +1332,19 @@
       else throw new Error(data.error?.message || "Error al subir a Cloudinary");
     }
 
-    /* SISTEMA DE CÁMARA CONTINUA EN VIVO CON SUBIDA EN LOTE AL FINAL */
-    window.startLiveCamera = async function() {
-      const modal = document.getElementById("cameraStreamModal");
-      const video = document.getElementById("cameraVideo");
-      const reviewImg = document.getElementById("cameraReviewImg");
-      
-      pendingBlobsBatch = [];
-      pendingBlob = null;
-      document.getElementById("cameraPhotoCount").textContent = "📸 Fotos en lote: 0";
+    /* MANEJO PROCESADO DE IMÁGENES (CÁMARA NATIVA + GALERÍA) */
+    async function processSelectedFiles(files) {
+      if (!files || !files.length) return;
 
-      video.style.display = "block";
-      reviewImg.style.display = "none";
-      document.getElementById("cameraCaptureControls").style.display = "flex";
-      document.getElementById("cameraReviewControls").style.display = "none";
-
-      try {
-        mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { exact: "environment" } },
-          audio: false
-        });
-      } catch (err) {
-        try {
-          mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-        } catch (e) {
-          showToast("❌ No se pudo acceder a la cámara: " + e.message);
-          return;
-        }
-      }
-
-      video.srcObject = mediaStream;
-      modal.classList.add("open");
-    };
-
-    window.takeLiveSnap = function() {
-      const video = document.getElementById("cameraVideo");
-      const canvas = document.getElementById("cameraCanvas");
-      const reviewImg = document.getElementById("cameraReviewImg");
-
-      if (!video.videoWidth) return;
-
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
-      reviewImg.src = dataUrl;
-
-      video.style.display = "none";
-      reviewImg.style.display = "block";
-
-      document.getElementById("cameraCaptureControls").style.display = "none";
-      document.getElementById("cameraReviewControls").style.display = "flex";
-
-      canvas.toBlob((blob) => {
-        pendingBlob = blob;
-      }, "image/jpeg", 0.85);
-    };
-
-    window.discardCurrentSnap = function() {
-      const video = document.getElementById("cameraVideo");
-      const reviewImg = document.getElementById("cameraReviewImg");
-
-      pendingBlob = null;
-      reviewImg.style.display = "none";
-      video.style.display = "block";
-
-      document.getElementById("cameraReviewControls").style.display = "none";
-      document.getElementById("cameraCaptureControls").style.display = "flex";
-    };
-
-    window.confirmAndUploadSnap = function() {
-      if (!pendingBlob) return;
-
-      pendingBlobsBatch.push(pendingBlob);
-      document.getElementById("cameraPhotoCount").textContent = `📸 Fotos en lote: ${pendingBlobsBatch.length}`;
-      showToast(`✅ Foto ${pendingBlobsBatch.length} guardada en memoria`);
-
-      discardCurrentSnap();
-    };
-
-    window.stopLiveCamera = async function() {
-      const modal = document.getElementById("cameraStreamModal");
-      const saveBtn = document.getElementById("saveBtn");
-
-      if (mediaStream) {
-        mediaStream.getTracks().forEach(track => track.stop());
-        mediaStream = null;
-      }
-      modal.classList.remove("open");
-
-      if (pendingBlobsBatch.length > 0) {
-        const maxDim = parseInt(document.getElementById("imgQuality").value || "800");
-        saveBtn.disabled = true;
-        saveBtn.textContent = "⏳ Subiendo lote de fotos...";
-        showToast(`⏳ Subiendo ${pendingBlobsBatch.length} foto(s) a Cloudinary...`);
-
-        const uploadPromises = pendingBlobsBatch.map(async (blobItem) => {
-          try {
-            const compressedBlob = await compressImage(new File([blobItem], "snap.jpg", { type: "image/jpeg" }), maxDim, 0.8);
-            return await uploadToCloudinary(compressedBlob);
-          } catch (err) {
-            return null;
-          }
-        });
-
-        try {
-          const results = await Promise.all(uploadPromises);
-          const successfulUrls = results.filter(url => url !== null);
-          
-          if (successfulUrls.length > 0) {
-            currentImages.push(...successfulUrls);
-            renderImagePreviews();
-            showToast(`🎉 ¡${successfulUrls.length} foto(s) agregada(s) al producto!`);
-          }
-        } catch (err) {
-          showToast("❌ Error al procesar subida del lote");
-        } finally {
-          saveBtn.disabled = false;
-          saveBtn.textContent = "💾 Guardar e Insertar al Catálogo";
-          pendingBlobsBatch = [];
-        }
-      }
-    };
-
-    /* MANEJO DE ARCHIVOS DESDE GALERÍA */
-    async function handleFileSelect(event) {
-      const files = Array.from(event.target.files);
-      if (!files.length) return;
-
-      const maxDim = parseInt(document.getElementById("imgQuality").value || "800");
+      const maxDim = parseInt(document.getElementById("imgQuality").value || "1200");
       const saveBtn = document.getElementById("saveBtn");
       saveBtn.disabled = true;
-      saveBtn.textContent = "⏳ Subiendo fotos...";
+      saveBtn.textContent = "⏳ Procesando fotos...";
+      showToast(`⏳ Procesando ${files.length} foto(s)...`);
 
       const uploadPromises = files.map(async (file) => {
         try {
-          const compressedBlob = await compressImage(file, maxDim, 0.8);
+          const compressedBlob = await compressImage(file, maxDim, 0.88);
           return await uploadToCloudinary(compressedBlob);
         } catch (err) {
           showToast(`❌ Error con ${file.name}`);
@@ -1522,18 +1358,29 @@
         if (successfulUrls.length > 0) {
           currentImages.push(...successfulUrls);
           renderImagePreviews();
-          showToast(`📷 ${successfulUrls.length} foto(s) subida(s)`);
+          showToast(`🎉 ${successfulUrls.length} foto(s) subida(s) en HD`);
         }
       } catch (err) {
-        showToast("❌ Error general en subida");
+        showToast("❌ Error general en la subida");
       } finally {
         saveBtn.disabled = false;
         saveBtn.textContent = "💾 Guardar e Insertar al Catálogo";
-        event.target.value = "";
       }
     }
 
-    document.getElementById("fileInput").addEventListener("change", handleFileSelect);
+    // Listener para Cámara Nativa
+    document.getElementById("cameraInput").addEventListener("change", (e) => {
+      const files = Array.from(e.target.files);
+      processSelectedFiles(files);
+      e.target.value = "";
+    });
+
+    // Listener para Galería Múltiple
+    document.getElementById("galleryInput").addEventListener("change", (e) => {
+      const files = Array.from(e.target.files);
+      processSelectedFiles(files);
+      e.target.value = "";
+    });
 
     function renderImagePreviews() {
       previewContainer.innerHTML = currentImages.map((img, idx) => `
@@ -1717,7 +1564,6 @@
     }
 
     window.addEventListener('popstate', () => {
-      if (document.getElementById("cameraStreamModal").classList.contains('open')) { stopLiveCamera(); return; }
       if (lightboxModal.classList.contains('open')) { lightboxModal.classList.remove('open'); return; }
       if (viewModal.classList.contains('open')) viewModal.classList.remove('open');
       if (document.getElementById("categoryModal").classList.contains('open')) closeCategoryModal();
