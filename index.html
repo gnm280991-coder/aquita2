@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Aquí tái | Tienda Oficial</title>
 
+  <!-- Meta etiquetas Open Graph para vista previa en WhatsApp -->
+  <meta property="og:title" content="Aquí tái | Tienda Oficial">
+  <meta property="og:description" content="Catálogo digital de productos e inventario disponible en Cochabamba, Bolivia.">
+  <meta property="og:image" content="https://aquita-tienda.web.app/logo.png">
+  <meta property="og:type" content="website">
+
   <style>
     :root {
       --bg-main: #0f172a;
@@ -777,21 +783,22 @@
       cartTotal.textContent = "Bs " + total.toFixed(2);
     }
 
-    /* 🟢 PEDIR CARRITO COMPLETO POR WHATSAPP CON URL LIMPIA PARA VISTA PREVIA */
+    /* 🟢 PEDIR CARRITO COMPLETO POR WHATSAPP */
     window.checkoutCartWhatsapp = function() {
       if (!cart.length) return alert("Tu carrito está vacío.");
+      
       let msg = "¡Hola! Quisiera realizar el pedido de los siguientes productos:\n\n";
       let total = 0;
+      
       cart.forEach((item, index) => {
         const sub = (item.price || 0) * item.qty;
         total += sub;
-        const images = getImagesArray(item);
-        const portadaImg = images.length > 0 ? images[0] : '';
+        const itemUrl = `${window.location.origin}${window.location.pathname}?p=${item.id}`;
         
         msg += `${index + 1}. *${item.name}* x${item.qty} - Bs ${sub.toFixed(2)}\n`;
-        if (portadaImg) msg += `${portadaImg}\n`;
-        msg += `\n`;
+        msg += `   📌 ${itemUrl}\n\n`;
       });
+      
       msg += `*Total a pagar: Bs ${total.toFixed(2)}*\n\n¿Me confirman la disponibilidad para coordinar el envío?`;
       window.open(`https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
     }
@@ -863,18 +870,17 @@
       lightboxCounter.textContent = `${activeImageIndex + 1} / ${activeGalleryImages.length}`;
     }
 
-    /* 🟢 PEDIR UN SOLO PRODUCTO POR WHATSAPP CON URL LIMPIA PARA VISTA PREVIA */
+    /* 🟢 PEDIR UN SOLO PRODUCTO POR WHATSAPP (MUESTRA TARJETA VISTA PREVIA) */
     window.orderSingleWhatsapp = function() {
       if (!currentSelectedProduct) return;
-      const images = getImagesArray(currentSelectedProduct);
-      const portadaImg = images.length > 0 ? images[0] : '';
+      
+      const productUrl = `${window.location.origin}${window.location.pathname}?p=${currentSelectedProduct.id}`;
 
       let msg = `¡Hola! Quisiera comprar el producto:\n\n` +
                 `*${currentSelectedProduct.name}*\n` +
-                `💵 Precio: Bs ${Number(currentSelectedProduct.price || 0).toFixed(2)}\n\n`;
-      
-      if (portadaImg) msg += `${portadaImg}\n\n`;
-      msg += `¿Tienen disponibilidad?`;
+                `💵 Precio: Bs ${Number(currentSelectedProduct.price || 0).toFixed(2)}\n\n` +
+                `📌 Ver en el catálogo:\n${productUrl}\n\n` +
+                `¿Tienen disponibilidad?`;
 
       window.open(`https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
     }
