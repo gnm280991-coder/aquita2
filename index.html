@@ -153,12 +153,8 @@
     }
 
     @keyframes marquee {
-      0% {
-        transform: translateX(0%);
-      }
-      100% {
-        transform: translateX(-50%);
-      }
+      0% { transform: translateX(0%); }
+      100% { transform: translateX(-50%); }
     }
 
     .main-container { max-width: 1200px; margin: 16px auto; padding: 0 12px; }
@@ -781,6 +777,7 @@
       cartTotal.textContent = "Bs " + total.toFixed(2);
     }
 
+    /* 🟢 PEDIR CARRITO COMPLETO POR WHATSAPP CON URL LIMPIA PARA VISTA PREVIA */
     window.checkoutCartWhatsapp = function() {
       if (!cart.length) return alert("Tu carrito está vacío.");
       let msg = "¡Hola! Quisiera realizar el pedido de los siguientes productos:\n\n";
@@ -792,9 +789,10 @@
         const portadaImg = images.length > 0 ? images[0] : '';
         
         msg += `${index + 1}. *${item.name}* x${item.qty} - Bs ${sub.toFixed(2)}\n`;
-        if (portadaImg) msg += `   📸 Foto: ${portadaImg}\n`;
+        if (portadaImg) msg += `${portadaImg}\n`;
+        msg += `\n`;
       });
-      msg += `\n*Total a pagar: Bs ${total.toFixed(2)}*\n\n¿Me confirman la disponibilidad para coordinar el envío?`;
+      msg += `*Total a pagar: Bs ${total.toFixed(2)}*\n\n¿Me confirman la disponibilidad para coordinar el envío?`;
       window.open(`https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
     }
 
@@ -865,6 +863,7 @@
       lightboxCounter.textContent = `${activeImageIndex + 1} / ${activeGalleryImages.length}`;
     }
 
+    /* 🟢 PEDIR UN SOLO PRODUCTO POR WHATSAPP CON URL LIMPIA PARA VISTA PREVIA */
     window.orderSingleWhatsapp = function() {
       if (!currentSelectedProduct) return;
       const images = getImagesArray(currentSelectedProduct);
@@ -872,9 +871,9 @@
 
       let msg = `¡Hola! Quisiera comprar el producto:\n\n` +
                 `*${currentSelectedProduct.name}*\n` +
-                `💵 Precio: Bs ${Number(currentSelectedProduct.price || 0).toFixed(2)}\n`;
+                `💵 Precio: Bs ${Number(currentSelectedProduct.price || 0).toFixed(2)}\n\n`;
       
-      if (portadaImg) msg += `📸 Ver foto: ${portadaImg}\n\n`;
+      if (portadaImg) msg += `${portadaImg}\n\n`;
       msg += `¿Tienen disponibilidad?`;
 
       window.open(`https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
